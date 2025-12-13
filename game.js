@@ -1,11 +1,13 @@
 // =============================================
 // KOKO ADVENTURE v4.0 - 10 LEVEL COMPLETE
 // Sistem Damage Lengkap dengan Elemental & Armor Types
+// + JUMP BOOSTER SYSTEM (3 charges, reset saat mati)
 // =============================================
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log("🎮 Koko Adventure v4.0 - Sistem Damage Komprehensif!");
     console.log("✨ FITUR: Elemental Damage, Armor Types, Combo System");
+    console.log("🚀 JUMP BOOSTER: 3 charges per hidup, reset saat respawn");
     
     // ========== GET CANVAS & CONTEXT ==========
     const canvas = document.getElementById('gameCanvas');
@@ -51,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========== DEBUG VARIABLES ==========
     let showDebugInfo = false;
     
-    // ========== PLAYER OBJECT ==========
+    // ========== PLAYER OBJECT DENGAN JUMP BOOSTER SYSTEM ==========
     const player = {
         x: 50,
         y: canvas.height - 100,
@@ -60,7 +62,8 @@ document.addEventListener('DOMContentLoaded', function() {
         velocityX: 0,
         velocityY: 0,
         speed: 180,
-        jumpPower: 450,
+        jumpPower: 550,
+        originalJumpPower: 550, // Simpan nilai original
         jumpSpeedBoost: 1.8,
         isJumping: false,
         facingRight: true,
@@ -92,6 +95,100 @@ document.addEventListener('DOMContentLoaded', function() {
         maxHorizontalSpeed: 250,
         onGround: false,
         justLanded: false,
+        
+        // ===== JUMP BOOSTER SYSTEM =====
+        hasJumpBooster: false,
+        jumpBoosterActive: false,
+        jumpBoosterTimer: 0,
+        jumpBoosterDuration: 5,
+        jumpBoosterPower: 800,
+        jumpBoosterCharges: 3,
+        jumpBoosterMaxCharges: 3,
+        jumpBoosterMultiplier: 2.0,
+        
+        // Method untuk menggunakan jump booster
+        useJumpBooster: function() {
+            // Cek apakah masih ada charge
+            if (this.jumpBoosterCharges <= 0) {
+                console.log("🚀 No jump booster charges left!");
+                return false;
+            }
+            
+            // Cek apakah sudah aktif
+            if (this.jumpBoosterActive) {
+                console.log("🚀 Jump booster already active!");
+                return false;
+            }
+            
+            // Aktifkan booster
+            this.jumpBoosterActive = true;
+            this.jumpBoosterTimer = this.jumpBoosterDuration;
+            this.jumpBoosterCharges--;
+            
+            // Simpan original jump power
+            if (!this.originalJumpPower) {
+                this.originalJumpPower = this.jumpPower;
+            }
+            
+            // Terapkan efek booster ke jump power
+            this.jumpPower = this.jumpBoosterPower;
+            this.hasJumpBooster = true;
+            
+            console.log(`🚀 JUMP BOOSTER ACTIVATED! Charges left: ${this.jumpBoosterCharges}, Duration: ${this.jumpBoosterDuration}s`);
+            
+            // Reset jump power setelah durasi
+            const booster = this;
+            setTimeout(() => {
+                if (booster.jumpBoosterActive) {
+                    booster.jumpBoosterActive = false;
+                    booster.jumpPower = booster.originalJumpPower;
+                    booster.hasJumpBooster = false;
+                    console.log("🚀 Jump booster deactivated");
+                }
+            }, this.jumpBoosterDuration * 1000);
+            
+            return true;
+        },
+        
+        // Method untuk reset booster saat mati
+        // Method untuk reset booster (jika ada)
+resetJumpBooster: function() {
+    // Reset saat player mati dan game over
+    this.jumpBoosterCharges = this.jumpBoosterMaxCharges;
+    this.jumpBoosterActive = false;
+    this.jumpBoosterTimer = 0;
+    this.jumpPower = this.originalJumpPower;
+    this.hasJumpBooster = false;
+    console.log(`🚀 Jump booster reset! Charges: ${this.jumpBoosterCharges}/${this.jumpBoosterMaxCharges}`);
+},
+        
+        // Method untuk update booster timer
+        updateJumpBooster: function(deltaTime) {
+            if (this.jumpBoosterActive) {
+                this.jumpBoosterTimer -= deltaTime;
+                if (this.jumpBoosterTimer <= 0) {
+                    this.jumpBoosterActive = false;
+                    this.jumpPower = this.originalJumpPower;
+                    this.hasJumpBooster = false;
+                    console.log("🚀 Jump booster expired (timer)");
+                }
+            }
+        },
+        
+        // Method untuk recharge booster
+        rechargeJumpBooster: function(amount = 1) {
+            const oldCharges = this.jumpBoosterCharges;
+            this.jumpBoosterCharges = Math.min(
+                this.jumpBoosterCharges + amount, 
+                this.jumpBoosterMaxCharges
+            );
+            
+            if (this.jumpBoosterCharges > oldCharges) {
+                console.log(`🚀 Jump booster recharged! Charges: ${this.jumpBoosterCharges}/${this.jumpBoosterMaxCharges}`);
+                return true;
+            }
+            return false;
+        },
         
         // ===== DAMAGE COOLDOWN =====
         lastPlatformDamage: 0,
@@ -287,6 +384,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========== KEY STATES ==========
     const keys = {};
     
+    // ========== MOBILE CONTROL STATE ==========
+    const mobileControlState = {
+        active: false,
+        mode: 'analog',
+        analogX: 0,
+        analogY: 0,
+        analogPower: 0,
+        isDragging: false,
+        touchId: null
+    };
+    
     // ========== HELPER FUNCTIONS ==========
     function drawPixelCircle(x, y, radius, pixelSize, color) {
         ctx.fillStyle = color;
@@ -298,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
+
     function drawPixelLeaf(x, y, width, height, color) {
         ctx.fillStyle = color;
         const leafSize = 3;
@@ -472,12 +580,32 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function activateSpeedBoost() {
         player.speed = 300;
-        player.jumpPower = 500;
+        player.jumpPower = 700;
         setTimeout(() => {
             player.speed = 180;
-            player.jumpPower = 380;
+            player.jumpPower = player.originalJumpPower;
         }, 10000);
         console.log(`⚡ SPEED BOOST: Activated for 10 seconds!`);
+    }
+    
+    // ========== CHEAT JUMP BOOSTER ==========
+    function cheatActivateJumpBooster() {
+        const success = player.useJumpBooster();
+        
+        if (success) {
+            console.log(`🚀 CHEAT: Jump Booster Activated!`);
+            
+            // Visual effect
+            createParticles(player.x + player.width/2, player.y + player.height/2, 
+                           30, '#00FFFF');
+            createParticles(player.x + player.width/2, player.y + player.height/2, 
+                           20, '#FF00FF');
+        }
+    }
+    
+    function cheatRefillJumpBooster() {
+        player.jumpBoosterCharges = player.jumpBoosterMaxCharges;
+        console.log(`🚀 CHEAT: Jump Booster refilled! Charges: ${player.jumpBoosterCharges}`);
     }
     
     function debugPlatformCollisions() {
@@ -490,7 +618,6 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 0; i < platforms.length; i++) {
             const p = platforms[i];
             
-            // Cek collision secara manual
             const isColliding = (
                 player.x + player.width > p.x &&
                 player.x < p.x + p.width &&
@@ -524,7 +651,6 @@ document.addEventListener('DOMContentLoaded', function() {
             patrolRange: 200,
             color: type === 'toxic' ? '#32CD32' : 
                    type === 'shooter' ? '#4169E1' : '#8B0000',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'metal',
             damageMultiplier: 1.0,
             weakAgainst: 'electric',
@@ -551,7 +677,6 @@ document.addEventListener('DOMContentLoaded', function() {
             chasing: false,
             venomous: type === 'venom',
             color: type === 'venom' ? '#006400' : '#228B22',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'leather',
             damageMultiplier: 1.2,
             weakAgainst: 'fire',
@@ -578,7 +703,6 @@ document.addEventListener('DOMContentLoaded', function() {
             chasing: false,
             webShooter: type === 'web',
             color: type === 'web' ? '#4B0082' : '#8B0000',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'exoskeleton',
             damageMultiplier: 0.8,
             weakAgainst: 'crush',
@@ -606,7 +730,6 @@ document.addEventListener('DOMContentLoaded', function() {
             frequency: 2,
             startY: 0,
             color: '#4B0082',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'flesh',
             damageMultiplier: 1.5,
             weakAgainst: 'fire',
@@ -632,7 +755,6 @@ document.addEventListener('DOMContentLoaded', function() {
             phaseThrough: true,
             transparency: 0.7,
             color: '#E6E6FA',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'ethereal',
             damageMultiplier: 0.5,
             weakAgainst: 'holy',
@@ -658,7 +780,6 @@ document.addEventListener('DOMContentLoaded', function() {
             splits: true,
             jumpTimer: 0,
             color: level >= 9 ? '#FF4500' : '#32CD32',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'gel',
             damageMultiplier: 0.7,
             weakAgainst: 'ice',
@@ -685,7 +806,6 @@ document.addEventListener('DOMContentLoaded', function() {
             flying: true,
             diveAttack: true,
             color: '#8B4513',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'feather',
             damageMultiplier: 1.3,
             weakAgainst: 'pierce',
@@ -710,7 +830,6 @@ document.addEventListener('DOMContentLoaded', function() {
             lastAttack: 0,
             throwSnowball: true,
             color: '#F0F8FF',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'fur',
             damageMultiplier: 0.6,
             weakAgainst: 'fire',
@@ -736,7 +855,6 @@ document.addEventListener('DOMContentLoaded', function() {
             spellCaster: true,
             spellTypes: ['fire', 'ice', 'lightning'],
             color: '#9370DB',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'cloth',
             damageMultiplier: 1.4,
             weakAgainst: 'physical',
@@ -761,7 +879,6 @@ document.addEventListener('DOMContentLoaded', function() {
             lastAttack: 0,
             throwsRocks: true,
             color: '#696969',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'stone',
             damageMultiplier: 0.4,
             weakAgainst: 'magic',
@@ -787,7 +904,6 @@ document.addEventListener('DOMContentLoaded', function() {
             flying: true,
             magicDust: true,
             color: '#FF69B4',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'magic',
             damageMultiplier: 1.6,
             weakAgainst: 'iron',
@@ -814,7 +930,6 @@ document.addEventListener('DOMContentLoaded', function() {
             flying: true,
             breathAttack: true,
             color: element === 'fire' ? '#FF4500' : '#1E90FF',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'scale',
             damageMultiplier: 0.3,
             weakAgainst: element === 'fire' ? 'ice' : 'fire',
@@ -840,7 +955,6 @@ document.addEventListener('DOMContentLoaded', function() {
             flying: true,
             rebirth: true,
             color: '#FF8C00',
-            // ===== DAMAGE SYSTEM =====
             armorType: 'fire',
             damageMultiplier: 0.8,
             weakAgainst: 'ice',
@@ -868,7 +982,6 @@ document.addEventListener('DOMContentLoaded', function() {
             attacks: ['fire_breath', 'wing_slam', 'tail_whip'],
             color: '#8B0000',
             isBoss: true,
-            // ===== DAMAGE SYSTEM =====
             armorType: 'dragon_scale',
             damageMultiplier: 0.2,
             weakAgainst: 'ice',
@@ -897,7 +1010,6 @@ document.addEventListener('DOMContentLoaded', function() {
             attacks: ['laser_beam', 'missile_barrage', 'shockwave'],
             color: '#2F4F4F',
             isBoss: true,
-            // ===== DAMAGE SYSTEM =====
             armorType: 'titanium',
             damageMultiplier: 0.25,
             weakAgainst: 'electric',
@@ -926,7 +1038,6 @@ document.addEventListener('DOMContentLoaded', function() {
             attacks: ['meteor_shower', 'lightning_storm', 'summon_minions'],
             color: '#4B0082',
             isBoss: true,
-            // ===== DAMAGE SYSTEM =====
             armorType: 'arcane',
             damageMultiplier: 0.3,
             weakAgainst: 'silence',
@@ -954,40 +1065,43 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ========== SETUP LEVEL ==========
-    function setupLevel(level) {
-        console.log(`🔄 Setup Level ${level}: ${levelConfigs[level].name}`);
-        
-        const config = levelConfigs[level];
-        gameState.currentLevel = level;
-        gameState.timeLeft = config.time;
-        gameState.lives = Math.min(5 + Math.floor(level/2), 10);
-        gameState.win = false;
-        gameState.gameOver = false;
-        gameState.running = false;
-        flag.collected = false;
-        
-        platforms = [];
-        enemies = [];
-        items = [];
-        projectiles = [];
-        enemyProjectiles = [];
-        particles = [];
-        backgroundElements = [];
-        
-        setupPlatforms(level);
-        setupEnemies(level);
-        setupItems(level);
-        setupBackground(level);
-        setupFlag(level);
-        resetPlayer();
-        
-        updateGameStats();
-        updateLevelButtons();
-        hideNextLevelButton();
-        
-        console.log(`✅ Level ${level} setup selesai!`);
-    }
+  function setupLevel(level) {
+    console.log(`🔄 Setup Level ${level}: ${levelConfigs[level].name}`);
     
+    const config = levelConfigs[level];
+    gameState.currentLevel = level;
+    gameState.timeLeft = config.time;
+    gameState.lives = Math.min(5 + Math.floor(level/2), 10);
+    gameState.win = false;
+    gameState.gameOver = false;
+    gameState.running = false;
+    flag.collected = false;
+    
+    platforms = [];
+    enemies = [];
+    items = [];
+    projectiles = [];
+    enemyProjectiles = [];
+    particles = [];
+    backgroundElements = [];
+    
+    setupPlatforms(level);
+    setupEnemies(level);
+    setupItems(level);
+    setupBackground(level);
+    setupFlag(level);
+    resetPlayer();
+    
+    // ===== SETEL JUMP BOOSTER CHARGES KE MAX SETIAP LEVEL BARU =====
+    player.jumpBoosterCharges = player.jumpBoosterMaxCharges;
+    console.log(`🚀 Level ${level}: Jump Booster set to ${player.jumpBoosterCharges} charges`);
+    
+    updateGameStats();
+    updateLevelButtons();
+    hideNextLevelButton();
+    
+    console.log(`✅ Level ${level} setup selesai!`);
+}
     function setupPlatforms(level) {
         const width = canvas.width * (1 + (level * 0.2));
         
@@ -1412,46 +1526,53 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function resetPlayer() {
-        player.x = 50;
-        player.y = canvas.height - 100;
-        player.velocityX = 0;
-        player.velocityY = 0;
-        player.isJumping = false;
-        player.onGround = false;
-        player.justLanded = false;
-        player.hasBoomerang = false;
-        player.hasShield = false;
-        player.invincible = false;
-        player.invincibleTimer = 0;
-        player.doubleJumpUsed = false;
-        player.jumpBuffer = 0;
-        player.coyoteTime = player.coyoteTimeMax;
-        player.jumpRequested = false;
-        player.attackCooldown = 0;
-        player.canAttack = true;
-        player.comboCount = 0;
-        player.lastAttackTime = 0;
-        player.isAttacking = false;
-        player.attackTimer = 0;
-        player.currentAttackType = 'basic';
-        player.attackElement = null;
-        player.isPoisoned = false;
-        player.poisonTimer = 0;
-        player.isSlowed = false;
-        player.slowTimer = 0;
-        player.isBurning = false;
-        player.burnTimer = 0;
-        player.lastPlatformDamage = 0;
-    }
-
+    player.x = 50;
+    player.y = canvas.height - 100;
+    player.velocityX = 0;
+    player.velocityY = 0;
+    player.isJumping = false;
+    player.onGround = false;
+    player.justLanded = false;
+    player.hasBoomerang = false;
+    player.hasShield = false;
+    player.invincible = false;
+    player.invincibleTimer = 0;
+    player.doubleJumpUsed = false;
+    player.jumpBuffer = 0;
+    player.coyoteTime = player.coyoteTimeMax;
+    player.jumpRequested = false;
+    player.attackCooldown = 0;
+    player.canAttack = true;
+    player.comboCount = 0;
+    player.lastAttackTime = 0;
+    player.isAttacking = false;
+    player.attackTimer = 0;
+    player.currentAttackType = 'basic';
+    player.attackElement = null;
+    player.isPoisoned = false;
+    player.poisonTimer = 0;
+    player.isSlowed = false;
+    player.slowTimer = 0;
+    player.isBurning = false;
+    player.burnTimer = 0;
+    player.lastPlatformDamage = 0;
+    
+    // JUMP BOOSTER: Jangan reset charges di sini
+    // Charges hanya direset di setupLevel() dan saat game over
+    player.hasJumpBooster = false;
+    player.jumpBoosterActive = false;
+    player.jumpBoosterTimer = 0;
+    player.jumpPower = player.originalJumpPower;
+    
+    console.log(`🚀 Player reset. Jump booster charges: ${player.jumpBoosterCharges}/${player.jumpBoosterMaxCharges}`);
+}
+    
     // ========== DAMAGE CALCULATION SYSTEM ==========
     function calculateDamageToEnemy(baseDamage, enemy, attackType = 'physical', attackElement = null) {
         let finalDamage = baseDamage;
         
-        // DAMAGE MULTIPLIER BASED ON ENEMY TYPE
         finalDamage *= enemy.damageMultiplier || 1.0;
         
-        // ELEMENTAL WEAKNESS/RESISTANCE
         if (attackElement && enemy.weakAgainst) {
             if (Array.isArray(enemy.weakAgainst)) {
                 if (enemy.weakAgainst.includes(attackElement)) {
@@ -1476,7 +1597,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // SPECIAL CASES
         switch(enemy.type) {
             case 'ghost':
                 if (attackType === 'physical') {
@@ -1521,12 +1641,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
         }
         
-        // COMBO BONUS
         if (player.comboCount >= 3) {
             finalDamage *= 1.5;
         }
         
-        // Ensure minimum damage
         finalDamage = Math.max(1, Math.round(finalDamage));
         
         return finalDamage;
@@ -1535,7 +1653,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function calculateDamageToPlayer(enemy) {
         let damage = enemy.baseDamage || 1;
         
-        // Player armor/defense calculations
         if (player.hasShield) {
             damage *= 0.5;
         }
@@ -1544,7 +1661,6 @@ document.addEventListener('DOMContentLoaded', function() {
             damage = 0;
         }
         
-        // SPECIAL ENEMY ATTACKS
         switch(enemy.type) {
             case 'snake':
                 if (enemy.venomous) {
@@ -1572,7 +1688,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
         }
         
-        // LEVEL SCALING
         damage += Math.floor(gameState.currentLevel / 3);
         
         return Math.max(1, damage);
@@ -1585,32 +1700,26 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log("👊 Melee attack performed!");
         
-        // Determine attack type based on combo
         let attackType = 'basic';
         if (player.comboCount === 2) attackType = 'combo1';
         if (player.comboCount >= 3) attackType = 'combo2';
         
         player.currentAttackType = attackType;
         
-        // Set attack state
         player.isAttacking = true;
         player.attackTimer = player.attackDuration;
         player.canAttack = false;
         player.attackCooldown = player.attackCooldownTime;
         player.lastAttackTime = Date.now() / 1000;
         
-        // COMBO SYSTEM
         player.comboCount++;
         if (player.comboCount > 3) player.comboCount = 3;
         
-        // Get base damage from attack type
         const attackInfo = player.attackTypes[attackType];
         let baseDamage = attackInfo.damage;
         
-        // Apply elemental damage if player has elemental attack
         let attackElement = player.attackElement;
         
-        // Visual effects based on combo and element
         let particleColor = attackInfo.color;
         if (attackElement === 'fire') particleColor = '#FF0000';
         if (attackElement === 'ice') particleColor = '#00FFFF';
@@ -1623,7 +1732,6 @@ document.addEventListener('DOMContentLoaded', function() {
             particleColor
         );
         
-        // Define attack hitbox
         const attackRange = 50 + player.comboCount * 10;
         const attackWidth = 40 + player.comboCount * 5;
         const attackHeight = 30;
@@ -1635,11 +1743,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let hitCount = 0;
         
-        // Check collision with enemies
         for (let i = enemies.length - 1; i >= 0; i--) {
             const enemy = enemies[i];
             
-            // Simple rectangle collision
             if (attackX < enemy.x + enemy.width &&
                 attackX + attackWidth > enemy.x &&
                 attackY < enemy.y + enemy.height &&
@@ -1647,7 +1753,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 hitCount++;
                 
-                // Calculate final damage with enemy resistance/weakness
                 const finalDamage = calculateDamageToEnemy(
                     baseDamage, 
                     enemy, 
@@ -1657,10 +1762,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 console.log(`💥 Hit ${enemy.type}! Base: ${baseDamage}, Final: ${finalDamage}, Combo: ${player.comboCount}`);
                 
-                // Apply damage
                 enemy.health -= finalDamage;
                 
-                // Visual feedback based on damage type
                 let hitColor = '#FF0000';
                 if (finalDamage > baseDamage * 1.5) {
                     hitColor = '#FFFF00';
@@ -1676,20 +1779,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     hitColor
                 );
                 
-                // Score based on damage and combo
                 const scoreMultiplier = player.comboCount;
                 const damageScore = finalDamage * 10 * scoreMultiplier;
                 gameState.score += damageScore;
                 
-                // Special effects based on enemy type
                 applyEnemyHitEffects(enemy, attackInfo.type, attackElement);
                 
-                // Check if enemy is defeated
                 if (enemy.health <= 0) {
                     const defeatScore = calculateDefeatScore(enemy, player.comboCount);
                     gameState.score += defeatScore;
                     
-                    // Special defeat effects
                     applyEnemyDefeatEffects(enemy);
                     
                     enemies.splice(i, 1);
@@ -1701,17 +1800,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         '#FF4500'
                     );
                     
-                    // Chance to drop item based on enemy type
                     dropItemFromEnemy(enemy);
                     
                     console.log(`🎯 ${enemy.type} defeated! Score: +${defeatScore}`);
                 } else {
-                    // Knockback effect only if not defeated
                     const knockbackPower = attackInfo.knockback;
                     const knockbackDirection = player.facingRight ? 1 : -1;
                     enemy.x += knockbackDirection * knockbackPower;
                     
-                    // Visual feedback for hit but not defeated
                     createParticles(
                         enemy.x + enemy.width/2, 
                         enemy.y + enemy.height/2, 
@@ -1724,7 +1820,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // If no enemies hit, reset combo after a while
         if (hitCount === 0 && player.comboCount > 1) {
             setTimeout(() => {
                 if (Date.now() / 1000 - player.lastAttackTime > 1) {
@@ -1734,7 +1829,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 1000);
         }
         
-        // COMBO UI FEEDBACK
         if (player.comboCount > 1) {
             setTimeout(() => {
                 createParticles(
@@ -1831,10 +1925,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function calculateDefeatScore(enemy, combo) {
         let baseScore = enemy.experienceValue || 100;
         
-        // Combo multiplier
         const comboMultiplier = 1 + (combo * 0.5);
         
-        // Level multiplier
         const levelMultiplier = 1 + (gameState.currentLevel * 0.1);
         
         return Math.floor(baseScore * comboMultiplier * levelMultiplier);
@@ -1910,16 +2002,72 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========== EVENT LISTENERS ==========
     function setupEventListeners() {
         console.log("🔧 Setting up event listeners...");
+
+        setupMobileControls();
         
         document.addEventListener('keydown', function(e) {
             console.log("⌨️ Key pressed:", e.key);
             
-            // ==== CEK TOMBOL CONTROL DITEKAN ====
             if (e.key === 'Control') {
                 keys['Control'] = true;
             }
             
-            // ==== CHEAT: SKIP LEVEL (Ctrl + S) ====
+            // ========== JUMP BOOSTER: Ctrl + B ==========
+            if (keys['Control'] && (e.key === 'b' || e.key === 'B')) {
+                e.preventDefault();
+                if (gameState.running && !gameState.paused) {
+                    console.log("🚀 JUMP BOOSTER: Attempting to activate...");
+                    const success = player.useJumpBooster();
+                    
+                    if (success) {
+                        console.log("🚀 JUMP BOOSTER: Activated via Ctrl+B!");
+                        
+                        createParticles(player.x + player.width/2, player.y + player.height/2, 
+                                       30, '#00FFFF');
+                        createParticles(player.x + player.width/2, player.y + player.height/2, 
+                                       20, '#FF00FF');
+                        
+                        // Apply immediate jump boost if on ground
+                        if (player.onGround) {
+                            player.velocityY = -player.jumpBoosterPower;
+                            player.isJumping = true;
+                            player.onGround = false;
+                            player.doubleJumpUsed = false;
+                            
+                            createParticles(player.x + player.width/2, player.y + player.height/2, 
+                                           40, '#00FFFF');
+                            console.log("🚀 SUPER JUMP BOOSTER ACTIVATED!");
+                        }
+                    } else {
+                        console.log("⚠️ JUMP BOOSTER: Cannot activate (no charges or already active)");
+                    }
+                }
+                return;
+            }
+            
+            // ========== JUMP BOOSTER: Single B key ==========
+            if (e.key === 'b' || e.key === 'B') {
+                e.preventDefault();
+                if (gameState.running && !gameState.paused) {
+                    console.log("🚀 JUMP BOOSTER (B key): Attempting to activate...");
+                    const success = player.useJumpBooster();
+                    
+                    if (success) {
+                        console.log("🚀 JUMP BOOSTER: Activated via B key!");
+                        
+                        createParticles(player.x + player.width/2, player.y + player.height/2, 
+                                       25, '#00FFFF');
+                        
+                        // Visual feedback for mobile users
+                        showJumpBoosterNotification(`Jump Booster Activated! (${player.jumpBoosterCharges} left)`);
+                    } else {
+                        console.log("⚠️ JUMP BOOSTER: No charges available or already active");
+                        showJumpBoosterNotification("No boosters left!", true);
+                    }
+                }
+                return;
+            }
+            
             if (keys['Control'] && (e.key === 's' || e.key === 'S')) {
                 e.preventDefault();
                 console.log("🚀 CHEAT ACTIVATED: Skip to next level!");
@@ -1927,42 +2075,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // ==== CHEAT: GOD MODE (Ctrl + G) ====
             if (keys['Control'] && (e.key === 'g' || e.key === 'G')) {
                 e.preventDefault();
                 toggleGodMode();
                 return;
             }
             
-            // ==== CHEAT: UNLOCK ALL LEVELS (Ctrl + U) ====
             if (keys['Control'] && (e.key === 'u' || e.key === 'U')) {
                 e.preventDefault();
                 unlockAllLevels();
                 return;
             }
             
-            // ==== CHEAT: ADD SCORE (Ctrl + D) ====
             if (keys['Control'] && (e.key === 'd' || e.key === 'D')) {
                 e.preventDefault();
                 addCheatScore();
                 return;
             }
             
-            // ==== CHEAT: SPEED BOOST (Ctrl + B) ====
             if (keys['Control'] && (e.key === 'b' || e.key === 'B')) {
                 e.preventDefault();
                 activateSpeedBoost();
                 return;
             }
             
-            // ==== CHEAT: DEBUG PLATFORM (Ctrl + P) ====
             if (keys['Control'] && (e.key === 'p' || e.key === 'P')) {
                 e.preventDefault();
                 debugPlatformCollisions();
                 return;
             }
             
-            // ==== MENCEGAH SCROLL UNTUK TOMBOL GAME ====
             const gameKeys = [' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'x', 'X', 'z', 'Z'];
             if (gameKeys.includes(e.key)) {
                 e.preventDefault();
@@ -1970,26 +2112,34 @@ document.addEventListener('DOMContentLoaded', function() {
             
             keys[e.key] = true;
             
-            // ==== LOMPATAN ====
             if (e.key === ' ' || e.key === 'x' || e.key === 'X' || e.key === 'ArrowUp') {
-                // Lompatan ditangani di handleJumpInput
-            }
-            
-            // ==== SUPER JUMP (Ctrl + Space) ====
-            if (keys['Control'] && (e.key === ' ' || e.key === 'x' || e.key === 'X')) {
-                if (!player.isJumping && gameState.running && !gameState.paused) {
-                    player.velocityY = -player.jumpPower * 2;
-                    player.isJumping = true;
-                    player.onGround = false;
-                    player.doubleJumpUsed = false;
-                    console.log("🚀 SUPER JUMP!");
-                    createParticles(player.x + player.width/2, player.y + player.height/2, 20, '#FF00FF');
+                if (gameState.running && !gameState.paused) {
+                    console.log("🦘 Jump key pressed (Space/ArrowUp/X)");
+                    player.jumpRequested = true;
+                    player.jumpBuffer = player.jumpBufferTime;
+                    
+                    if (player.onGround) {
+                        // Gunakan jump booster power jika aktif
+                        const currentJumpPower = player.jumpBoosterActive ? player.jumpBoosterPower : player.jumpPower;
+                        player.velocityY = -currentJumpPower;
+                        player.isJumping = true;
+                        player.onGround = false;
+                        player.doubleJumpUsed = false;
+                        
+                        if (player.jumpBoosterActive) {
+                            createParticles(player.x + player.width/2, player.y + player.height/2, 
+                                           25, '#00FFFF');
+                            console.log("🚀 Jump with booster!");
+                        } else {
+                            console.log("🦘 Normal jump!");
+                        }
+                    }
                 }
             }
             
-            // ==== SERANGAN / BOOMERANG ====
             if (e.key === 'z' || e.key === 'Z') {
                 if (gameState.running && !gameState.paused) {
+                    console.log("👊 Attack key pressed (Z)");
                     if (player.hasBoomerang) {
                         throwBoomerang();
                         console.log("🌀 Boomerang thrown!");
@@ -2000,7 +2150,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            // ==== ELEMENTAL ATTACKS (CHEAT) ====
             if (keys['Control'] && (e.key === '1')) {
                 player.attackElement = 'fire';
                 player.hasElementalAttack = true;
@@ -2017,7 +2166,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("⚡ Electric attack enabled!");
             }
             
-            // ==== PAUSE GAME ====
             if (e.key === 'Escape') {
                 togglePause();
                 e.preventDefault();
@@ -2025,20 +2173,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         document.addEventListener('keyup', function(e) {
-            // ==== RESET TOMBOL CONTROL ====
             if (e.key === 'Control') {
                 keys['Control'] = false;
             }
             
             keys[e.key] = false;
             
-            // Reset jump request
             if (e.key === ' ' || e.key === 'x' || e.key === 'X' || e.key === 'ArrowUp') {
                 player.jumpRequested = false;
+                if (player.velocityY < -100) {
+                    player.velocityY *= player.jumpCutMultiplier;
+                }
             }
         });
         
-        // ==== TOMBOL START ====
         const startBtn = document.getElementById('startBtn');
         console.log("🔧 Start button element:", startBtn);
         
@@ -2071,136 +2219,48 @@ document.addEventListener('DOMContentLoaded', function() {
             alert("Error: Tombol 'Mulai Game' tidak ditemukan!");
         }
         
-        // ==== TOMBOL PAUSE ====
         const pauseBtn = document.getElementById('pauseBtn');
         if (pauseBtn) {
             pauseBtn.addEventListener('click', togglePause);
         }
         
-        // ==== TOMBOL RESET ====
         const resetBtn = document.getElementById('resetBtn');
         if (resetBtn) {
             resetBtn.addEventListener('click', restartGame);
         }
         
-        // ==== TOMBOL SOUND ====
         const soundBtn = document.getElementById('soundBtn');
         if (soundBtn) {
             soundBtn.addEventListener('click', toggleSound);
         }
         
-        // ==== TOMBOL NEXT LEVEL ====
         const nextLevelBtn = document.getElementById('nextLevelBtn');
-        if (nextLevelBtn) {
-            nextLevelBtn.addEventListener('click', function() {
-                console.log("➡️ Next level button clicked");
-                if (gameState.currentLevel < gameState.maxLevel && 
-                    gameState.currentLevel + 1 <= gameState.unlockedLevel) {
-                    setupLevel(gameState.currentLevel + 1);
-                    startGame();
-                    hideNextLevelButton();
-                }
-            });
+if (nextLevelBtn) {
+    nextLevelBtn.addEventListener('click', function() {
+        console.log("➡️ Next level button clicked");
+        if (gameState.currentLevel < gameState.maxLevel && 
+            gameState.currentLevel + 1 <= gameState.unlockedLevel) {
+            
+            // ===== PERTAHANKAN JUMP BOOSTER CHARGES KE LEVEL BERIKUTNYA =====
+            const currentBoosterCharges = player.jumpBoosterCharges;
+            console.log(`🚀 Carrying over ${currentBoosterCharges} jump booster charges to next level`);
+            
+            setupLevel(gameState.currentLevel + 1);
+            
+            // OVERRIDE: Setel ulang charges ke nilai yang dipertahankan
+            // (setupLevel akan set ke max, jadi kita perlu override)
+            player.jumpBoosterCharges = currentBoosterCharges;
+            
+            startGame();
+            hideNextLevelButton();
+            
+            console.log(`🚀 Jump booster after level change: ${player.jumpBoosterCharges} charges`);
         }
+    });
+}
         
-        // ==== TOMBOL LEVEL SELECTION ====
-        const levelButtons = document.querySelectorAll('.level-btn');
-        console.log("🔧 Level buttons found:", levelButtons.length);
+        updateLevelButtons();
         
-        levelButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const level = parseInt(this.getAttribute('data-level'));
-                console.log(`🎯 Level ${level} selected`);
-                if (level <= gameState.unlockedLevel) {
-                    setupLevel(level);
-                    if (!gameState.running) {
-                        startGame();
-                    }
-                } else {
-                    alert(`Level ${level} terkunci! Selesaikan level ${level-1} terlebih dahulu.`);
-                }
-            });
-        });
-        
-        // ==== MOBILE CONTROLS ====
-        const leftBtn = document.getElementById('leftBtn');
-        const rightBtn = document.getElementById('rightBtn');
-        const upBtn = document.getElementById('upBtn');
-        const attackBtn = document.getElementById('attackBtn');
-        const boomerangBtn = document.getElementById('boomerangBtn');
-        
-        console.log("🔧 Mobile controls:", {
-            leftBtn: !!leftBtn,
-            rightBtn: !!rightBtn,
-            upBtn: !!upBtn,
-            attackBtn: !!attackBtn,
-            boomerangBtn: !!boomerangBtn
-        });
-        
-        if (leftBtn) {
-            leftBtn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                keys['ArrowLeft'] = true;
-            });
-            leftBtn.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                keys['ArrowLeft'] = false;
-            });
-        }
-        
-        if (rightBtn) {
-            rightBtn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                keys['ArrowRight'] = true;
-            });
-            rightBtn.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                keys['ArrowRight'] = false;
-            });
-        }
-        
-        if (upBtn) {
-            upBtn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                keys['ArrowUp'] = true;
-                player.jumpRequested = true;
-            });
-            upBtn.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                keys['ArrowUp'] = false;
-                player.jumpRequested = false;
-            });
-        }
-        
-        if (attackBtn) {
-            attackBtn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                console.log("📱 Attack button (mobile) pressed");
-                if (gameState.running && !gameState.paused) {
-                    if (player.hasBoomerang) {
-                        throwBoomerang();
-                    } else {
-                        performMeleeAttack();
-                    }
-                }
-            });
-        } else {
-            console.error("❌ ERROR: Attack button (mobile) not found!");
-        }
-        
-        if (boomerangBtn) {
-            boomerangBtn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                console.log("📱 Boomerang button (mobile) pressed");
-                if (gameState.running && !gameState.paused && player.hasBoomerang) {
-                    throwBoomerang();
-                } else if (gameState.running && !gameState.paused) {
-                    performMeleeAttack();
-                }
-            });
-        }
-        
-        // ==== WINDOW FOCUS/BLUR ====
         window.addEventListener('blur', function() {
             if (gameState.running && !gameState.paused) {
                 gameState.paused = true;
@@ -2222,6 +2282,476 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log("✅ Event listeners setup complete!");
     }
+    
+    // ========== JUMP BOOSTER NOTIFICATION ==========
+    function showJumpBoosterNotification(message, isError = false) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'jump-booster-notification';
+        notification.innerHTML = `
+            <i class="fas fa-rocket"></i>
+            <span>${message}</span>
+        `;
+        
+        // Style the notification
+        notification.style.cssText = `
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: ${isError ? '#FF5252' : '#4CAF50'};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease-in';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+        
+        // Add CSS animation if not already present
+        if (!document.querySelector('#jumpBoosterStyles')) {
+            const style = document.createElement('style');
+            style.id = 'jumpBoosterStyles';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOutRight {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+
+    // ========== MOBILE CONTROLS SETUP ==========
+function setupMobileControls() {
+    console.log("📱 Setting up mobile controls...");
+    
+    const modeAnalogBtn = document.getElementById('modeAnalog');
+    const modeDPadBtn = document.getElementById('modeDPad');
+    const analogControls = document.getElementById('analogControls');
+    const dpadControls = document.getElementById('dpadControls');
+    
+    if (modeAnalogBtn && modeDPadBtn) {
+        modeAnalogBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            mobileControlState.mode = 'analog';
+            modeAnalogBtn.classList.add('active');
+            modeDPadBtn.classList.remove('active');
+            analogControls.style.display = 'flex';
+            dpadControls.style.display = 'none';
+            resetMobileInputs();
+            console.log("🕹️ Switched to Analog mode");
+        });
+        
+        modeDPadBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            mobileControlState.mode = 'dpad';
+            modeDPadBtn.classList.add('active');
+            modeAnalogBtn.classList.remove('active');
+            analogControls.style.display = 'none';
+            dpadControls.style.display = 'flex';
+            resetMobileInputs();
+            console.log("🎮 Switched to D-Pad mode");
+        });
+    }
+    
+    setupAnalogStick();
+    
+    setupDPadButtons();
+    
+    setupActionButtons();
+    
+    console.log("✅ Mobile controls setup complete!");
+}
+
+function setupAnalogStick() {
+    const analogKnob = document.getElementById('analogKnob');
+    const analogBase = document.querySelector('.analog-base');
+    
+    if (!analogKnob || !analogBase) {
+        console.error("❌ Analog stick elements not found!");
+        return;
+    }
+    
+    analogKnob.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        mobileControlState.isDragging = true;
+        mobileControlState.touchId = e.touches[0].identifier;
+        analogKnob.classList.add('active');
+    });
+    
+    document.addEventListener('touchmove', function(e) {
+        if (!mobileControlState.isDragging || mobileControlState.mode !== 'analog') return;
+        
+        e.preventDefault();
+        
+        let touch = null;
+        for (let i = 0; i < e.touches.length; i++) {
+            if (e.touches[i].identifier === mobileControlState.touchId) {
+                touch = e.touches[i];
+                break;
+            }
+        }
+        if (!touch) return;
+        
+        const rect = analogBase.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const maxDistance = rect.width / 2 - 30;
+        
+        let deltaX = touch.clientX - centerX;
+        let deltaY = touch.clientY - centerY;
+        
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        if (distance > maxDistance) {
+            deltaX = (deltaX / distance) * maxDistance;
+            deltaY = (deltaY / distance) * maxDistance;
+        }
+        
+        analogKnob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+        
+        mobileControlState.analogX = deltaX / maxDistance;
+        mobileControlState.analogY = deltaY / maxDistance;
+        mobileControlState.analogPower = Math.min(1, distance / maxDistance);
+        
+        updateMovementFromAnalog();
+    }, { passive: false });
+    
+    document.addEventListener('touchend', function(e) {
+        if (!mobileControlState.isDragging) return;
+        
+        e.preventDefault();
+        mobileControlState.isDragging = false;
+        mobileControlState.touchId = null;
+        analogKnob.classList.remove('active');
+        analogKnob.style.transform = 'translate(0px, 0px)';
+        
+        mobileControlState.analogX = 0;
+        mobileControlState.analogY = 0;
+        mobileControlState.analogPower = 0;
+        
+        resetMobileInputs();
+    });
+    
+    analogKnob.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        mobileControlState.isDragging = true;
+        analogKnob.classList.add('active');
+    });
+    
+    document.addEventListener('mousemove', function(e) {
+        if (!mobileControlState.isDragging || mobileControlState.mode !== 'analog') return;
+        
+        e.preventDefault();
+        
+        const rect = analogBase.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const maxDistance = rect.width / 2 - 30;
+        
+        let deltaX = e.clientX - centerX;
+        let deltaY = e.clientY - centerY;
+        
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        if (distance > maxDistance) {
+            deltaX = (deltaX / distance) * maxDistance;
+            deltaY = (deltaY / distance) * maxDistance;
+        }
+        
+        analogKnob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+        
+        mobileControlState.analogX = deltaX / maxDistance;
+        mobileControlState.analogY = deltaY / maxDistance;
+        mobileControlState.analogPower = Math.min(1, distance / maxDistance);
+        
+        updateMovementFromAnalog();
+    });
+    
+    document.addEventListener('mouseup', function(e) {
+        if (!mobileControlState.isDragging) return;
+        
+        e.preventDefault();
+        mobileControlState.isDragging = false;
+        analogKnob.classList.remove('active');
+        analogKnob.style.transform = 'translate(0px, 0px)';
+        
+        mobileControlState.analogX = 0;
+        mobileControlState.analogY = 0;
+        mobileControlState.analogPower = 0;
+        
+        resetMobileInputs();
+    });
+}
+
+function updateMovementFromAnalog() {
+    const threshold = 0.3;
+    
+    if (mobileControlState.analogX < -threshold) {
+        keys['ArrowLeft'] = true;
+        keys['ArrowRight'] = false;
+        player.facingRight = false;
+    } else if (mobileControlState.analogX > threshold) {
+        keys['ArrowLeft'] = false;
+        keys['ArrowRight'] = true;
+        player.facingRight = true;
+    } else {
+        keys['ArrowLeft'] = false;
+        keys['ArrowRight'] = false;
+    }
+    
+    if (mobileControlState.analogY < -threshold * 1.5) {
+        if (!player.isJumping && player.onGround) {
+            keys['ArrowUp'] = true;
+            keys[' '] = true;
+            player.jumpRequested = true;
+            player.jumpBuffer = player.jumpBufferTime;
+        }
+    } else {
+        keys['ArrowUp'] = false;
+        keys[' '] = false;
+        player.jumpRequested = false;
+    }
+    
+    if (mobileControlState.analogY > threshold * 1.5) {
+        keys['ArrowDown'] = true;
+    } else {
+        keys['ArrowDown'] = false;
+    }
+    
+    mobileControlState.active = true;
+}
+
+function setupDPadButtons() {
+    const dpadButtons = ['leftBtnV2', 'rightBtnV2', 'upBtnV2', 'downBtnV2'];
+    
+    dpadButtons.forEach(btnId => {
+        const button = document.getElementById(btnId);
+        if (!button) return;
+        
+        button.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (mobileControlState.mode === 'dpad') {
+                handleDPadPress(btnId, true);
+                this.classList.add('active');
+            }
+        });
+        
+        button.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            handleDPadPress(btnId, false);
+            this.classList.remove('active');
+        });
+        
+        button.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            if (mobileControlState.mode === 'dpad') {
+                handleDPadPress(btnId, true);
+                this.classList.add('active');
+            }
+        });
+        
+        button.addEventListener('mouseup', function(e) {
+            e.preventDefault();
+            handleDPadPress(btnId, false);
+            this.classList.remove('active');
+        });
+        
+        button.addEventListener('mouseleave', function(e) {
+            if (this.classList.contains('active')) {
+                handleDPadPress(btnId, false);
+                this.classList.remove('active');
+            }
+        });
+    });
+}
+
+function handleDPadPress(buttonId, pressed) {
+    switch(buttonId) {
+        case 'leftBtnV2':
+            keys['ArrowLeft'] = pressed;
+            if (pressed) player.facingRight = false;
+            break;
+        case 'rightBtnV2':
+            keys['ArrowRight'] = pressed;
+            if (pressed) player.facingRight = true;
+            break;
+        case 'upBtnV2':
+            keys['ArrowUp'] = pressed;
+            keys[' '] = pressed;
+            keys['x'] = pressed;
+            keys['X'] = pressed;
+            if (pressed) {
+                player.jumpRequested = true;
+                player.jumpBuffer = player.jumpBufferTime;
+            } else {
+                player.jumpRequested = false;
+            }
+            break;
+        case 'downBtnV2':
+            keys['ArrowDown'] = pressed;
+            break;
+    }
+    
+    mobileControlState.active = true;
+}
+
+function setupActionButtons() {
+    // Jump button
+    const jumpBtn = document.getElementById('jumpBtn');
+    if (jumpBtn) {
+        jumpBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (gameState.running && !gameState.paused) {
+                keys['ArrowUp'] = true;
+                keys[' '] = true;
+                keys['x'] = true;
+                keys['X'] = true;
+                player.jumpRequested = true;
+                player.jumpBuffer = player.jumpBufferTime;
+                this.classList.add('active');
+                console.log("🦘 Mobile jump pressed");
+            }
+        });
+        
+        jumpBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            keys['ArrowUp'] = false;
+            keys[' '] = false;
+            keys['x'] = false;
+            keys['X'] = false;
+            player.jumpRequested = false;
+            this.classList.remove('active');
+        });
+    }
+    
+    // Attack button
+    const attackBtn = document.getElementById('attackBtnV2');
+    if (attackBtn) {
+        attackBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (gameState.running && !gameState.paused) {
+                keys['z'] = true;
+                keys['Z'] = true;
+                this.classList.add('active');
+                
+                if (player.hasBoomerang) {
+                    throwBoomerang();
+                    console.log("🌀 Mobile boomerang thrown");
+                } else {
+                    performMeleeAttack();
+                    console.log("👊 Mobile attack performed");
+                }
+            }
+        });
+        
+        attackBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            keys['z'] = false;
+            keys['Z'] = false;
+            this.classList.remove('active');
+        });
+    }
+    
+    // Boomerang button
+    const boomerangBtn = document.getElementById('boomerangBtnV2');
+    if (boomerangBtn) {
+        boomerangBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (gameState.running && !gameState.paused && player.hasBoomerang) {
+                keys['z'] = true;
+                keys['Z'] = true;
+                this.classList.add('active');
+                throwBoomerang();
+                console.log("🌀 Mobile boomerang button pressed");
+            }
+        });
+        
+        boomerangBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            keys['z'] = false;
+            keys['Z'] = false;
+            this.classList.remove('active');
+        });
+    }
+    
+    // JUMP BOOSTER BUTTON FOR MOBILE
+    const jumpBoosterBtn = document.getElementById('jumpBoosterBtn');
+    if (jumpBoosterBtn) {
+        jumpBoosterBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (gameState.running && !gameState.paused) {
+                const success = player.useJumpBooster();
+                
+                if (success) {
+                    console.log("🚀 Mobile: Jump Booster activated!");
+                    this.classList.add('active');
+                    
+                    // Update UI
+                    const boosterCount = this.querySelector('.booster-count');
+                    if (boosterCount) {
+                        boosterCount.textContent = player.jumpBoosterCharges;
+                    }
+                    
+                    // Visual feedback
+                    createParticles(player.x + player.width/2, player.y + player.height/2, 
+                                   25, '#00FFFF');
+                    showJumpBoosterNotification(`Jump Booster! (${player.jumpBoosterCharges} left)`);
+                    
+                    // Apply immediate jump if on ground
+                    if (player.onGround) {
+                        player.velocityY = -player.jumpBoosterPower;
+                        player.isJumping = true;
+                        player.onGround = false;
+                        player.doubleJumpUsed = false;
+                        
+                        createParticles(player.x + player.width/2, player.y + player.height/2, 
+                                       35, '#00FFFF');
+                        console.log("🚀 SUPER JUMP BOOSTER ACTIVATED!");
+                    }
+                } else {
+                    console.log("⚠️ Mobile: Cannot activate jump booster");
+                    showJumpBoosterNotification("No boosters left!", true);
+                }
+            }
+        });
+        
+        jumpBoosterBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            this.classList.remove('active');
+        });
+    }
+}
+
+function resetMobileInputs() {
+    keys['ArrowLeft'] = false;
+    keys['ArrowRight'] = false;
+    keys['ArrowUp'] = false;
+    keys['ArrowDown'] = false;
+    keys[' '] = false;
+    keys['x'] = false;
+    keys['X'] = false;
+    keys['z'] = false;
+    keys['Z'] = false;
+    
+    document.querySelectorAll('.dir-btn-v2, .action-btn-v2, .analog-knob').forEach(btn => {
+        btn.classList.remove('active');
+    });
+}
     
     // ========== GAME CONTROLS ==========
     function startGame() {
@@ -2277,21 +2807,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    function restartGame() {
-        console.log("🔄 Restarting game...");
-        gameState.score = 0;
-        gameState.lives = 5;
-        gameState.timeLeft = levelConfigs[gameState.currentLevel].time;
-        gameState.gameOver = false;
-        gameState.win = false;
-        gameState.running = true;
-        
-        setupLevel(gameState.currentLevel);
-        startGame();
-        hideNextLevelButton();
-        
-        console.log("✅ Game restarted!");
-    }
+   function restartGame() {
+    console.log("🔄 Restarting game...");
+    gameState.score = 0;
+    gameState.lives = 5;
+    gameState.timeLeft = levelConfigs[gameState.currentLevel].time;
+    gameState.gameOver = false;
+    gameState.win = false;
+    gameState.running = true;
+    
+    // ===== RESET JUMP BOOSTER CHARGES SAAT RESTART GAME =====
+    player.jumpBoosterCharges = player.jumpBoosterMaxCharges;
+    player.jumpBoosterActive = false;
+    player.jumpBoosterTimer = 0;
+    player.jumpPower = player.originalJumpPower;
+    player.hasJumpBooster = false;
+    
+    setupLevel(gameState.currentLevel);
+    startGame();
+    hideNextLevelButton();
+    
+    console.log(`✅ Game restarted! Jump booster: ${player.jumpBoosterCharges} charges`);
+}
     
     function togglePause() {
         if (!gameState.running || gameState.gameOver || gameState.win) {
@@ -2349,6 +2886,10 @@ document.addEventListener('DOMContentLoaded', function() {
         updateEnemyProjectiles(deltaTime);
         updateParticles(deltaTime);
         updatePlayerTimers(deltaTime);
+        
+        // ===== UPDATE JUMP BOOSTER =====
+        player.updateJumpBooster(deltaTime);
+        
         updateGameTimer(deltaTime);
         checkCollisions();
         checkWinCondition();
@@ -2372,8 +2913,15 @@ document.addEventListener('DOMContentLoaded', function() {
             targetVelocityX = 1;
             player.facingRight = true;
         }
+
+        if (mobileControlState.active) {
+            if (mobileControlState.mode === 'analog' && mobileControlState.analogPower > 0.1) {
+                targetVelocityX = mobileControlState.analogX;
+                if (mobileControlState.analogX < 0) player.facingRight = false;
+                if (mobileControlState.analogX > 0) player.facingRight = true;
+            }
+        }
         
-        // ===== KONTROL DI UDARA & DI TANAH =====
         if (!player.isJumping || (player.isJumping && player.airControl > 0)) {
             let currentAcceleration = player.isJumping ? 
                 player.acceleration * player.airControl : player.acceleration;
@@ -2402,7 +2950,6 @@ document.addEventListener('DOMContentLoaded', function() {
         player.x += player.velocityX * deltaTime;
         player.y += player.velocityY * deltaTime;
         
-        // ===== KONTROL DI UDARA =====
         if (player.isJumping) {
             const airSpeed = player.speed * player.airControl * player.jumpSpeedBoost;
             
@@ -2412,9 +2959,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (keys['ArrowRight'] || keys['d'] || keys['D']) {
                 player.velocityX = Math.min(airSpeed, player.velocityX + 80 * deltaTime);
             }
+            
+            if (keys['ArrowDown']) {
+                player.velocityY += player.gravity * deltaTime * 0.5;
+            }
         }
         
-        // ===== UPDATE ATTACK TIMERS =====
         if (player.attackCooldown > 0) {
             player.attackCooldown -= deltaTime;
         } else {
@@ -2428,13 +2978,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // ===== COMBO SYSTEM =====
         const currentTime = Date.now() / 1000;
         if (currentTime - player.lastAttackTime > player.comboWindow) {
             player.comboCount = 0;
         }
         
-        // Batas layar
         if (player.x < 0) {
             player.x = 0;
             if (player.velocityX < 0) player.velocityX = 0;
@@ -2446,7 +2994,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (player.velocityX > 0) player.velocityX = 0;
         }
         
-        // ===== DETEKSI PLATFORM =====
         let wasOnGround = player.onGround;
         player.onGround = false;
         player.justLanded = false;
@@ -2506,7 +3053,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (gameState.currentLevel === 4) {
-            player.jumpPower = 480;
+            player.jumpPower = 600;
             player.airControl = 0.9;
             player.jumpSpeedBoost = 2.0;
             
@@ -2515,7 +3062,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 !player.doubleJumpUsed &&
                 player.velocityY > -player.jumpPower * 0.7) {
                 
-                player.velocityY = -player.jumpPower * 0.95;
+                // Gunakan jump booster power jika aktif
+                const doubleJumpPower = player.jumpBoosterActive ? 
+                    player.jumpBoosterPower * 0.7 : player.jumpPower * 0.95;
+                player.velocityY = -doubleJumpPower;
                 player.doubleJumpUsed = true;
                 player.jumpBuffer = 0;
                 
@@ -2526,62 +3076,60 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function handleJumpInput(deltaTime) {
-        if ((keys[' '] || keys['x'] || keys['X'] || keys['ArrowUp']) && 
-            gameState.running && !gameState.paused) {
-            player.jumpBuffer = player.jumpBufferTime;
-            player.jumpRequested = true;
-        } else {
-            player.jumpBuffer = Math.max(0, player.jumpBuffer - deltaTime);
-            player.jumpRequested = false;
-        }
-        
-        if (!player.isJumping && player.onGround) {
+        if (player.onGround) {
             player.coyoteTime = player.coyoteTimeMax;
         } else {
-            player.coyoteTime = Math.max(0, player.coyoteTime - deltaTime);
+            player.coyoteTime -= deltaTime;
         }
         
-        if (player.jumpBuffer > 0 && !player.isJumping && player.coyoteTime > 0) {
-            player.velocityY = -player.jumpPower;
-            player.isJumping = true;
-            player.onGround = false;
-            player.doubleJumpUsed = false;
-            player.jumpBuffer = 0;
-            
-            console.log("⬆️ Normal jump!");
-            createParticles(player.x + player.width/2, player.y + player.height/2, 8, '#00FF00');
+        if (player.jumpBuffer > 0) {
+            player.jumpBuffer -= deltaTime;
         }
         
-        if (player.jumpRequested && 
-            player.isJumping && 
-            player.canDoubleJump && 
-            !player.doubleJumpUsed &&
-            player.velocityY > -player.jumpPower * 0.6) {
-            
-            player.velocityY = -player.jumpPower * 0.85;
-            player.doubleJumpUsed = true;
-            player.jumpBuffer = 0;
-            
-            console.log("🦅 Double jump!");
-            createParticles(player.x + player.width/2, player.y + player.height/2, 10, '#00FFFF');
-            
-            if (keys['ArrowRight'] || keys['d'] || keys['D']) {
-                player.velocityX = Math.min(player.maxHorizontalSpeed * 1.3, player.velocityX + 120);
-            }
-            if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
-                player.velocityX = Math.max(-player.maxHorizontalSpeed * 1.3, player.velocityX - 120);
-            }
-        }
+        const canJumpFromBuffer = player.jumpBuffer > 0;
+        const canJumpFromGround = player.onGround;
+        const canJumpFromCoyote = !player.onGround && player.coyoteTime > 0 && !player.isJumping;
+        const canDoubleJump = !player.doubleJumpUsed && player.canDoubleJump && player.isJumping;
         
-        if (player.isJumping && player.velocityY < -100) {
-            if (!(keys[' '] || keys['x'] || keys['X'] || keys['ArrowUp'])) {
-                player.velocityY *= player.jumpCutMultiplier;
+        if (player.jumpRequested || canJumpFromBuffer) {
+            if (canJumpFromGround || canJumpFromCoyote) {
+                // Gunakan jump booster power jika aktif
+                const currentJumpPower = player.jumpBoosterActive ? player.jumpBoosterPower : player.jumpPower;
+                
+                player.velocityY = -currentJumpPower;
+                player.isJumping = true;
+                player.onGround = false;
+                player.coyoteTime = 0;
+                player.jumpBuffer = 0;
+                player.doubleJumpUsed = false;
+                
+                console.log("🦘 Jump!" + (player.jumpBoosterActive ? " (with booster)" : ""));
+                
+                const particleCount = player.jumpBoosterActive ? 25 : 10;
+                const particleColor = player.jumpBoosterActive ? '#00FFFF' : '#4CAF50';
+                createParticles(player.x + player.width/2, player.y + player.height/2, 
+                               particleCount, particleColor);
+            } else if (canDoubleJump) {
+                // Double jump dengan booster
+                const doubleJumpPower = player.jumpBoosterActive ? 
+                    player.jumpBoosterPower * 0.8 : player.jumpPower * 0.8;
+                player.velocityY = -doubleJumpPower;
+                player.doubleJumpUsed = true;
+                player.jumpBuffer = 0;
+                
+                console.log("✨ Double jump!" + (player.jumpBoosterActive ? " (with booster)" : ""));
+                
+                const particleCount = player.jumpBoosterActive ? 18 : 12;
+                const particleColor = player.jumpBoosterActive ? '#00FFFF' : '#00FFFF';
+                createParticles(player.x + player.width/2, player.y + player.height/2, 
+                               particleCount, particleColor);
             }
+            
+            player.jumpRequested = false;
         }
     }
     
     function updateStatusEffects(deltaTime) {
-        // Poison effect
         if (player.isPoisoned) {
             player.poisonTimer -= deltaTime;
             if (player.poisonTimer <= 0) {
@@ -2592,17 +3140,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Slow effect
         if (player.isSlowed) {
             player.slowTimer -= deltaTime;
             if (player.slowTimer <= 0) {
                 player.isSlowed = false;
                 player.speed = 180;
-                player.jumpPower = 450;
+                player.jumpPower = player.originalJumpPower;
             }
         }
         
-        // Burn effect
         if (player.isBurning) {
             player.burnTimer -= deltaTime;
             if (player.burnTimer <= 0) {
@@ -2762,7 +3308,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     player.hasBoomerang = true;
                 }
                 
-                // Check boomerang collision with enemies
                 for (let j = enemies.length - 1; j >= 0; j--) {
                     const enemy = enemies[j];
                     
@@ -2879,7 +3424,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const collisionRangeX = 300;
         const collisionRangeY = 200;
         
-        // ==== ENEMY COLLISIONS ====
         for (let i = enemies.length - 1; i >= 0; i--) {
             const enemy = enemies[i];
             
@@ -2899,7 +3443,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (distance < minDistance) {
                 
-                // Player jumping on enemy
                 if (player.velocityY > 0 && dy > 0) {
                     const stompDamage = player.attackTypes.jumpAttack.damage;
                     const finalDamage = calculateDamageToEnemy(stompDamage, enemy, 'crush', null);
@@ -2909,7 +3452,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     createParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, 
                                   15 + finalDamage, '#FFD700');
                     
-                    player.velocityY = -player.jumpPower * 0.7;
+                    const bouncePower = player.jumpBoosterActive ? 
+                        player.jumpBoosterPower * 0.7 : player.jumpPower * 0.7;
+                    player.velocityY = -bouncePower;
                     
                     gameState.score += 30 + (finalDamage * 5);
                     
@@ -2922,7 +3467,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         dropItemFromEnemy(enemy);
                     }
                 } else {
-                    // Player taking damage from enemy
                     const enemyDamage = calculateDamageToPlayer(enemy);
                     let damageType = 'physical';
                     
@@ -2945,13 +3489,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     player.invincible = true;
                     player.invincibleTimer = 1.5;
                     
-                    // Special enemy attack effects
                     applyEnemyAttackEffects(enemy);
                 }
             }
         }
         
-        // ==== ITEM COLLISIONS ====
         for (let i = items.length - 1; i >= 0; i--) {
             const item = items[i];
             
@@ -2973,7 +3515,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // ==== FLAG COLLISION ====
         if (!flag.collected) {
             const distanceX = Math.abs(player.x - flag.x);
             const distanceY = Math.abs(player.y - flag.y);
@@ -3010,7 +3551,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     player.jumpPower *= 0.8;
                     setTimeout(() => {
                         player.speed = 180;
-                        player.jumpPower = 450;
+                        player.jumpPower = player.originalJumpPower;
                     }, 3000);
                     console.log("🕸️ Slowed by spider web!");
                     createParticles(player.x + player.width/2, player.y + player.height/2, 10, '#FFFFFF');
@@ -3039,48 +3580,52 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ========== GAME STATE FUNCTIONS ==========
     function takeDamage(damage, damageType = 'physical', source = null) {
-        if (player.hasShield) {
-            player.hasShield = false;
-            player.shieldTime = 0;
-            createParticles(player.x + player.width/2, player.y + player.height/2, 15, '#4169E1');
-            console.log("🛡️ Shield blocked damage!");
-            return;
-        }
-        
-        if (player.invincible) {
-            console.log("✨ Invincible, damage ignored");
-            return;
-        }
-        
-        let finalDamage = damage;
-        
-        if (player.hasElementalAttack && player.elementalType === 'ice' && damageType === 'fire') {
-            finalDamage *= 0.7;
-        }
-        
-        gameState.lives -= finalDamage;
-        if (gameState.lives < 0) gameState.lives = 0;
-        
-        player.invincible = true;
-        player.invincibleTimer = 1.5;
-        
-        player.comboCount = 0;
-        
-        let damageColor = '#FF0000';
-        if (damageType === 'poison') damageColor = '#00FF00';
-        if (damageType === 'fire') damageColor = '#FF4500';
-        if (damageType === 'ice') damageColor = '#00FFFF';
-        
-        updateGameStats();
-        createParticles(player.x + player.width/2, player.y + player.height/2, 
-                       10 + Math.floor(finalDamage * 3), damageColor);
-        
-        console.log(`💥 Damage taken! Type: ${damageType}, Amount: ${finalDamage}, Source: ${source}, Lives left: ${gameState.lives}`);
-        
-        if (gameState.lives <= 0) {
-            gameOver();
-        }
+    if (player.hasShield) {
+        player.hasShield = false;
+        player.shieldTime = 0;
+        createParticles(player.x + player.width/2, player.y + player.height/2, 15, '#4169E1');
+        console.log("🛡️ Shield blocked damage!");
+        return;
     }
+    
+    if (player.invincible) {
+        console.log("✨ Invincible, damage ignored");
+        return;
+    }
+    
+    let finalDamage = damage;
+    
+    if (player.hasElementalAttack && player.elementalType === 'ice' && damageType === 'fire') {
+        finalDamage *= 0.7;
+    }
+    
+    gameState.lives -= finalDamage;
+    if (gameState.lives < 0) gameState.lives = 0;
+    
+    player.invincible = true;
+    player.invincibleTimer = 1.5;
+    
+    player.comboCount = 0;
+    
+    // ===== HAPUS RESET JUMP BOOSTER DI SINI =====
+    // HANYA reset saat game over atau restart level
+    // JANGAN reset saat hanya kehilangan nyawa
+    
+    let damageColor = '#FF0000';
+    if (damageType === 'poison') damageColor = '#00FF00';
+    if (damageType === 'fire') damageColor = '#FF4500';
+    if (damageType === 'ice') damageColor = '#00FFFF';
+    
+    updateGameStats();
+    createParticles(player.x + player.width/2, player.y + player.height/2, 
+                   10 + Math.floor(finalDamage * 3), damageColor);
+    
+    console.log(`💥 Damage taken! Type: ${damageType}, Amount: ${finalDamage}, Source: ${source}, Lives left: ${gameState.lives}`);
+    
+    if (gameState.lives <= 0) {
+        gameOver();
+    }
+}
     
     function collectItem(item) {
         switch(item.type) {
@@ -3110,6 +3655,14 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'star':
                 gameState.score += 500;
                 gameState.lives = Math.min(gameState.lives + 2, 10);
+                
+                // ===== JUMP BOOSTER RECHARGE =====
+                const recharged = player.rechargeJumpBooster();
+                if (recharged) {
+                    console.log(`✨ Jump booster recharged from star! Charges: ${player.jumpBoosterCharges}`);
+                    createParticles(item.x + item.width/2, item.y + item.height/2, 15, '#00FFFF');
+                }
+                
                 if (!player.hasElementalAttack) {
                     player.hasElementalAttack = true;
                     const elements = ['fire', 'ice', 'electric'];
@@ -3125,37 +3678,46 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function winLevel() {
-        gameState.win = true;
-        gameState.running = false;
-        
-        const timeBonus = Math.floor(gameState.timeLeft * 10);
-        const livesBonus = gameState.lives * 100;
-        const levelBonus = gameState.currentLevel * 500;
-        
-        gameState.score += timeBonus + livesBonus + levelBonus;
-        
-        if (gameState.currentLevel < gameState.maxLevel) {
-            if (gameState.currentLevel + 1 > gameState.unlockedLevel) {
-                gameState.unlockedLevel = gameState.currentLevel + 1;
-            }
+    gameState.win = true;
+    gameState.running = false;
+    
+    const timeBonus = Math.floor(gameState.timeLeft * 10);
+    const livesBonus = gameState.lives * 100;
+    const levelBonus = gameState.currentLevel * 500;
+    
+    gameState.score += timeBonus + livesBonus + levelBonus;
+    
+    if (gameState.currentLevel < gameState.maxLevel) {
+        if (gameState.currentLevel + 1 > gameState.unlockedLevel) {
+            gameState.unlockedLevel = gameState.currentLevel + 1;
         }
-        
-        updateGameStats();
-        updateLevelButtons();
-        
-        setTimeout(() => {
-            showLevelCompletePopup(timeBonus, livesBonus, levelBonus);
-        }, 1000);
     }
     
+    // ===== PERTAHANKAN JUMP BOOSTER CHARGES SAAT MENANG =====
+    // Charges TIDAK direset saat menang level, tetap seperti semula
+    console.log(`🏆 Level ${gameState.currentLevel} completed! Jump booster charges: ${player.jumpBoosterCharges} (carried over to next level)`);
+    
+    updateGameStats();
+    updateLevelButtons();
+    
+    setTimeout(() => {
+        showLevelCompletePopup(timeBonus, livesBonus, levelBonus);
+    }, 1000);
+}
+    
     function gameOver() {
-        gameState.gameOver = true;
-        gameState.running = false;
-        
-        setTimeout(() => {
-            alert(`Game Over!\nSkor akhir: ${gameState.score}\nLevel yang dicapai: ${gameState.currentLevel}`);
-        }, 500);
-    }
+    gameState.gameOver = true;
+    gameState.running = false;
+    
+    // ===== RESET JUMP BOOSTER CHARGES HANYA SAAT GAME OVER =====
+    // (bukan saat hanya kehilangan nyawa)
+    console.log("💀 Game Over - Resetting jump booster charges...");
+    player.resetJumpBooster();
+    
+    setTimeout(() => {
+        alert(`Game Over!\nSkor akhir: ${gameState.score}\nLevel yang dicapai: ${gameState.currentLevel}\n\nJump Booster akan direset ke 3 charges untuk permainan baru.`);
+    }, 500);
+}
     
     function checkWinCondition() {
         if (flag.collected && !gameState.win) {
@@ -3182,6 +3744,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (levelEl) levelEl.textContent = `Level ${gameState.currentLevel}/10`;
         if (timerEl) timerEl.textContent = Math.floor(gameState.timeLeft);
         if (unlockedLevelEl) unlockedLevelEl.textContent = gameState.unlockedLevel;
+        
+        // Update jump booster display di mobile controls
+        const boosterCount = document.querySelector('.booster-count');
+        if (boosterCount) {
+            boosterCount.textContent = player.jumpBoosterCharges;
+        }
+        
+        // Update jump booster button state
+        const jumpBoosterBtn = document.getElementById('jumpBoosterBtn');
+        if (jumpBoosterBtn) {
+            jumpBoosterBtn.disabled = player.jumpBoosterCharges <= 0 || player.jumpBoosterActive;
+            
+            // Update tooltip atau title
+            if (player.jumpBoosterCharges <= 0) {
+                jumpBoosterBtn.title = "No boosters left!";
+            } else if (player.jumpBoosterActive) {
+                jumpBoosterBtn.title = "Booster already active!";
+            } else {
+                jumpBoosterBtn.title = `Jump Booster (${player.jumpBoosterCharges} left)`;
+            }
+        }
     }
     
     function updateLevelButtons() {
@@ -3234,77 +3817,93 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    function showLevelCompletePopup(timeBonus, livesBonus, levelBonus) {
-        let popup = document.querySelector('.level-complete-popup');
-        let overlay = document.querySelector('.overlay');
+   function showLevelCompletePopup(timeBonus, livesBonus, levelBonus) {
+    let popup = document.querySelector('.level-complete-popup');
+    let overlay = document.querySelector('.overlay');
+    
+    if (!popup) {
+        overlay = document.createElement('div');
+        overlay.className = 'overlay';
+        document.body.appendChild(overlay);
         
-        if (!popup) {
-            overlay = document.createElement('div');
-            overlay.className = 'overlay';
-            document.body.appendChild(overlay);
-            
-            popup = document.createElement('div');
-            popup.className = 'level-complete-popup';
-            popup.innerHTML = `
-                <h2><i class="fas fa-trophy"></i> Level ${gameState.currentLevel} Selesai!</h2>
-                <div class="stats">
-                    <div>Bonus Waktu: <span>${timeBonus}</span></div>
-                    <div>Bonus Nyawa: <span>${livesBonus}</span></div>
-                    <div>Bonus Level: <span>${levelBonus}</span></div>
-                    <div style="border-top: 2px solid #4CAF50; margin-top: 10px; padding-top: 10px;">
-                        Total Skor: <span>${gameState.score}</span>
-                    </div>
+        popup = document.createElement('div');
+        popup.className = 'level-complete-popup';
+        popup.innerHTML = `
+            <h2><i class="fas fa-trophy"></i> Level ${gameState.currentLevel} Selesai!</h2>
+            <div class="stats">
+                <div>Bonus Waktu: <span>${timeBonus}</span></div>
+                <div>Bonus Nyawa: <span>${livesBonus}</span></div>
+                <div>Bonus Level: <span>${levelBonus}</span></div>
+                <div style="border-top: 2px solid #4CAF50; margin-top: 10px; padding-top: 10px;">
+                    Total Skor: <span>${gameState.score}</span>
                 </div>
-                <div class="popup-buttons">
-                    <button class="popup-btn next">Level Berikutnya</button>
-                    <button class="popup-btn retry">Ulangi Level</button>
-                    <button class="popup-btn menu">Menu Utama</button>
+                <div style="margin-top: 10px; padding: 5px; background: #00FFFF20; border-radius: 5px;">
+                    <i class="fas fa-rocket"></i> Jump Booster: <span>${player.jumpBoosterCharges} charges</span> dibawa ke level berikutnya
                 </div>
-            `;
-            document.body.appendChild(popup);
-            
-            popup.querySelector('.popup-btn.next').addEventListener('click', function() {
-                if (gameState.currentLevel < gameState.maxLevel) {
-                    setupLevel(gameState.currentLevel + 1);
-                    startGame();
-                }
-                overlay.classList.remove('show');
-                popup.classList.remove('show');
-            });
-            
-            popup.querySelector('.popup-btn.retry').addEventListener('click', function() {
-                restartGame();
-                overlay.classList.remove('show');
-                popup.classList.remove('show');
-            });
-            
-            popup.querySelector('.popup-btn.menu').addEventListener('click', function() {
-                gameState.running = false;
-                gameState.gameStarted = false;
-                document.getElementById('startBtn').innerHTML = '<i class="fas fa-play"></i> Mulai Game';
-                overlay.classList.remove('show');
-                popup.classList.remove('show');
-            });
-        } else {
-            popup.querySelector('h2').innerHTML = `<i class="fas fa-trophy"></i> Level ${gameState.currentLevel} Selesai!`;
-            popup.querySelectorAll('.stats span')[0].textContent = timeBonus;
-            popup.querySelectorAll('.stats span')[1].textContent = livesBonus;
-            popup.querySelectorAll('.stats span')[2].textContent = levelBonus;
-            popup.querySelectorAll('.stats span')[3].textContent = gameState.score;
-            
-            const nextBtn = popup.querySelector('.popup-btn.next');
+            </div>
+            <div class="popup-buttons">
+                <button class="popup-btn next">Level Berikutnya</button>
+                <button class="popup-btn retry">Ulangi Level</button>
+                <button class="popup-btn menu">Menu Utama</button>
+            </div>
+        `;
+        document.body.appendChild(popup);
+        
+        popup.querySelector('.popup-btn.next').addEventListener('click', function() {
             if (gameState.currentLevel < gameState.maxLevel) {
-                nextBtn.textContent = 'Level Berikutnya';
-                nextBtn.disabled = false;
-            } else {
-                nextBtn.textContent = 'Game Selesai!';
-                nextBtn.disabled = true;
+                // Pertahankan booster charges ke level berikutnya
+                const currentBoosterCharges = player.jumpBoosterCharges;
+                
+                setupLevel(gameState.currentLevel + 1);
+                
+                // Override reset dari setupLevel
+                player.jumpBoosterCharges = currentBoosterCharges;
+                console.log(`🚀 Jump booster carried over: ${player.jumpBoosterCharges} charges`);
+                
+                startGame();
             }
-        }
+            overlay.classList.remove('show');
+            popup.classList.remove('show');
+        });
         
-        overlay.classList.add('show');
-        popup.classList.add('show');
+        popup.querySelector('.popup-btn.retry').addEventListener('click', function() {
+            // Saat retry level, reset ke 3 charges
+            player.jumpBoosterCharges = player.jumpBoosterMaxCharges;
+            console.log(`🔄 Level retry - Jump booster reset to: ${player.jumpBoosterCharges} charges`);
+            
+            restartGame();
+            overlay.classList.remove('show');
+            popup.classList.remove('show');
+        });
+        
+        popup.querySelector('.popup-btn.menu').addEventListener('click', function() {
+            gameState.running = false;
+            gameState.gameStarted = false;
+            document.getElementById('startBtn').innerHTML = '<i class="fas fa-play"></i> Mulai Game';
+            overlay.classList.remove('show');
+            popup.classList.remove('show');
+        });
+    } else {
+        popup.querySelector('h2').innerHTML = `<i class="fas fa-trophy"></i> Level ${gameState.currentLevel} Selesai!`;
+        popup.querySelectorAll('.stats span')[0].textContent = timeBonus;
+        popup.querySelectorAll('.stats span')[1].textContent = livesBonus;
+        popup.querySelectorAll('.stats span')[2].textContent = levelBonus;
+        popup.querySelectorAll('.stats span')[3].textContent = gameState.score;
+        popup.querySelectorAll('.stats span')[4].textContent = player.jumpBoosterCharges;
+        
+        const nextBtn = popup.querySelector('.popup-btn.next');
+        if (gameState.currentLevel < gameState.maxLevel) {
+            nextBtn.textContent = 'Level Berikutnya';
+            nextBtn.disabled = false;
+        } else {
+            nextBtn.textContent = 'Game Selesai!';
+            nextBtn.disabled = true;
+        }
     }
+    
+    overlay.classList.add('show');
+    popup.classList.add('show');
+}
     
     // ========== VISUAL EFFECTS ==========
     function createParticles(x, y, count, color) {
@@ -3371,6 +3970,64 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Draw status effects
         drawStatusEffects();
+        
+        // Draw jump booster indicator
+        drawJumpBoosterIndicator();
+    }
+    
+    function drawJumpBoosterIndicator() {
+        if (player.jumpBoosterActive && gameState.running && !gameState.paused) {
+            const boostX = canvas.width - 150;
+            const boostY = 80;
+            
+            // Timer bar
+            const barWidth = 100;
+            const barHeight = 15;
+            const progress = player.jumpBoosterTimer / player.jumpBoosterDuration;
+            
+            // Background
+            ctx.fillStyle = '#333333';
+            ctx.fillRect(boostX, boostY, barWidth, barHeight);
+            
+            // Progress
+            ctx.fillStyle = '#00FFFF';
+            ctx.fillRect(boostX, boostY, barWidth * progress, barHeight);
+            
+            // Border
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(boostX, boostY, barWidth, barHeight);
+            
+            // Icon
+            ctx.fillStyle = '#00FFFF';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🚀', boostX + barWidth/2, boostY - 20);
+            
+            // Text
+            ctx.font = '14px Arial';
+            ctx.fillText(`JUMP BOOSTER (${player.jumpBoosterCharges} left)`, boostX + barWidth/2, boostY + 30);
+            
+            // Timer text
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText(`${Math.ceil(player.jumpBoosterTimer)}s`, boostX + barWidth/2, boostY + barHeight/2 + 1);
+        } else if (player.jumpBoosterCharges > 0 && gameState.running && !gameState.paused) {
+            // Show charges count even when not active
+            const boostX = canvas.width - 150;
+            const boostY = 80;
+            
+            ctx.fillStyle = '#00FFFF';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🚀', boostX + 50, boostY - 10);
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '14px Arial';
+            ctx.fillText(`Charges: ${player.jumpBoosterCharges}`, boostX + 50, boostY + 15);
+        }
     }
     
     function drawComboCounter() {
@@ -3447,6 +4104,14 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.fillText('🔥 Burning', 20, yPos);
             yPos += 25;
         }
+        
+        // Draw jump booster charges
+        if (player.jumpBoosterCharges > 0) {
+            ctx.fillStyle = '#00FFFF';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`🚀 x${player.jumpBoosterCharges}`, 20, yPos);
+        }
     }
     
     function drawStartScreen() {
@@ -3477,11 +4142,12 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.fillStyle = '#a5d6a7';
         ctx.font = '18px Arial';
         ctx.fillText('Kontrol:', canvas.width/2, canvas.height/2 + 100);
-        ctx.fillText('← → : Gerak | ↑/Spasi/X : Lompat | Z : Serang', canvas.width/2, canvas.height/2 + 130);
+        ctx.fillText('← → : Gerak | Spasi/↑/X : Lompat | Z : Serang', canvas.width/2, canvas.height/2 + 130);
+        ctx.fillText('JUMP BOOSTER: B (3 charges, reset saat mati)', canvas.width/2, canvas.height/2 + 160);
         
         ctx.fillStyle = '#FFD700';
         ctx.font = 'bold 22px Arial';
-        ctx.fillText(`Level Terbuka: ${gameState.unlockedLevel}/10`, canvas.width/2, canvas.height/2 + 180);
+        ctx.fillText(`Level Terbuka: ${gameState.unlockedLevel}/10`, canvas.width/2, canvas.height/2 + 200);
         
         ctx.fillStyle = '#4CAF50';
         ctx.font = 'bold 28px Arial';
@@ -3677,19 +4343,31 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.arc(centerX + eyeOffset/2, centerY, radius/3, 0.2 * Math.PI, 0.8 * Math.PI);
         ctx.stroke();
         
-        // Draw attack effect when attacking
-        if (player.isAttacking) {
-            const attackRadius = radius * (1 + Math.sin(Date.now() / 100) * 0.3);
-            ctx.strokeStyle = player.attackTypes[player.currentAttackType].color;
-            if (player.attackElement === 'fire') ctx.strokeStyle = '#FF0000';
-            if (player.attackElement === 'ice') ctx.strokeStyle = '#00FFFF';
-            if (player.attackElement === 'electric') ctx.strokeStyle = '#FFFF00';
-            ctx.lineWidth = 3;
-            ctx.globalAlpha = 0.5;
+        // Draw jump booster effect
+        if (player.jumpBoosterActive) {
+            const pulse = Math.sin(Date.now() / 200) * 0.3 + 0.7;
+            ctx.strokeStyle = `rgba(0, 255, 255, ${pulse})`;
+            ctx.lineWidth = 4;
+            ctx.globalAlpha = 0.7;
             ctx.beginPath();
-            ctx.arc(centerX, centerY, attackRadius, 0, Math.PI * 2);
+            ctx.arc(centerX, centerY, radius + 10, 0, Math.PI * 2);
             ctx.stroke();
             ctx.globalAlpha = 1;
+            
+            // Draw booster particles
+            const particleCount = 3;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (Date.now() / 100 + i * Math.PI * 2 / particleCount) % (Math.PI * 2);
+                const px = centerX + Math.cos(angle) * (radius + 15);
+                const py = centerY + Math.sin(angle) * (radius + 15);
+                
+                ctx.fillStyle = '#00FFFF';
+                ctx.globalAlpha = 0.8;
+                ctx.beginPath();
+                ctx.arc(px, py, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
         }
         
         if (player.hasShield) {
@@ -3712,7 +4390,6 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.fillRect(player.x + player.width/2 - 5, player.y - 15, 10, 10);
         }
         
-        // Status effect visuals
         if (player.isPoisoned) {
             ctx.strokeStyle = '#00FF00';
             ctx.lineWidth = 2;
@@ -3756,7 +4433,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
             
-            // Enemy-specific details
             switch(enemy.type) {
                 case 'robot_basic':
                 case 'robot_fast':
@@ -4042,10 +4718,17 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.textAlign = 'left';
         ctx.fillText(`${config.name} - ${config.difficulty}`, 10, 30);
         
+        // Jump Booster Display
+        ctx.fillStyle = '#00FFFF';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'right';
+        ctx.fillText(`🚀 ${player.jumpBoosterCharges}/3`, canvas.width - 20, 30);
+        
         // Combo display
         if (player.comboCount > 1) {
             ctx.fillStyle = '#FFD700';
             ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'right';
             ctx.fillText(`COMBO x${player.comboCount}`, canvas.width - 100, 30);
         }
         
@@ -4058,6 +4741,8 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.fillText(`Element: ${player.attackElement || 'none'}`, 10, 80);
             ctx.fillText(`Attack CD: ${player.attackCooldown.toFixed(2)}`, 10, 95);
             ctx.fillText(`Enemies: ${enemies.length}`, 10, 110);
+            ctx.fillText(`Jump Booster: ${player.jumpBoosterCharges} charges`, 10, 125);
+            ctx.fillText(`Booster Active: ${player.jumpBoosterActive}`, 10, 140);
         }
         
         if (gameState.paused) {
@@ -4107,36 +4792,29 @@ document.addEventListener('DOMContentLoaded', function() {
         
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '28px Arial';
-        ctx.fillText(`Skor: ${gameState.score}`, canvas.width/2, canvas.height/2 - 20);
+        ctx.fillText(`Skor: ${gameState.score}`, canvas.width/2, canvas.height/2);
         
         if (gameState.currentLevel < gameState.maxLevel) {
-            ctx.fillStyle = '#FFD700';
-            ctx.font = 'bold 32px Arial';
-            ctx.fillText(`Level ${gameState.currentLevel + 1} TERBUKA!`, canvas.width/2, canvas.height/2 + 40);
-        } else {
-            ctx.fillStyle = '#FF4500';
-            ctx.font = 'bold 36px Arial';
-            ctx.fillText('SELAMAT! ANDA MENYELESAIKAN GAME!', canvas.width/2, canvas.height/2 + 40);
-        }
-        
-        ctx.fillStyle = '#a5d6a7';
-        ctx.font = '20px Arial';
-        if (gameState.currentLevel < gameState.maxLevel) {
+            ctx.fillStyle = '#a5d6a7';
+            ctx.font = '20px Arial';
             ctx.fillText('Tekan tombol "Level Berikutnya" untuk melanjutkan', canvas.width/2, canvas.height - 100);
         } else {
-            ctx.fillText('Anda telah menyelesaikan semua level!', canvas.width/2, canvas.height - 100);
+            ctx.fillStyle = '#FFD700';
+            ctx.font = '24px Arial';
+            ctx.fillText('SELAMAT! Anda telah menyelesaikan semua level!', canvas.width/2, canvas.height - 150);
+            ctx.fillStyle = '#a5d6a7';
+            ctx.fillText('Game Selesai!', canvas.width/2, canvas.height - 100);
         }
     }
     
-    // ========== HELPER FUNCTION ==========
-    function isInViewport(object) {
-        return object.x + object.width > gameState.camera.x && 
-               object.x < gameState.camera.x + gameState.camera.width &&
-               object.y + object.height > gameState.camera.y && 
-               object.y < gameState.camera.y + gameState.camera.height;
+    // ========== UTILITY FUNCTIONS ==========
+    function isInViewport(obj) {
+        return obj.x + obj.width > gameState.camera.x && 
+               obj.x < gameState.camera.x + gameState.camera.width &&
+               obj.y + obj.height > gameState.camera.y && 
+               obj.y < gameState.camera.y + gameState.camera.height;
     }
     
-    // ========== INITIALIZE AND START ==========
-    console.log("🔄 Starting game initialization...");
+    // ========== INIT GAME ==========
     init();
 });

@@ -17,7 +17,7 @@
 
     <div class="container">
         <header>
-            <h1><i class="fas fa-dragon"></i> Koko Adventure </h1>
+            <h1><i class="fas fa-dragon"></i> Koko Adventure v4.0</h1>
             <p class="subtitle">10 Level Petualangan di Hutan Ajaib!</p>
         </header>
 
@@ -77,30 +77,83 @@
                 </button>
             </div>
 
-            <!-- LEVEL SELECTOR - DIPERBARUI UNTUK 10 LEVEL -->
+            <!-- LEVEL SELECTOR -->
             <div class="level-selector">
                 <h3><i class="fas fa-layer-group"></i> Pilih Level (Terbuka: <span id="unlockedLevel">1</span>/10):</h3>
                 <div class="level-buttons">
                     <!-- Tombol level akan dibuat dinamis oleh JavaScript -->
-                    <!-- JavaScript akan membuat tombol untuk 10 level -->
                 </div>
             </div>
 
+            <!-- ========== MOBILE CONTROLS ========== -->
             <div class="mobile-controls">
-                <div class="d-pad">
-                    <button id="leftBtn" class="dir-btn"><i class="fas fa-arrow-left"></i></button>
-                    <div class="d-pad-center">
-                        <button id="upBtn" class="dir-btn"><i class="fas fa-arrow-up"></i></button>
-                    </div>
-                    <button id="rightBtn" class="dir-btn"><i class="fas fa-arrow-right"></i></button>
+                <!-- Control Mode Selector -->
+                <div class="control-mode">
+                    <button id="modeAnalog" class="control-mode-btn active">Analog Stick</button>
+                    <button id="modeDPad" class="control-mode-btn">D-Pad</button>
                 </div>
-                <div class="action-buttons">
-                    <button id="attackBtn" class="action-btn"><i class="fas fa-bolt"></i></button>
-                    <button id="boomerangBtn" class="action-btn boomerang-btn"><i class="fas fa-space-shuttle"></i></button>
+                
+                <!-- Analog Stick Version (Default) -->
+                <div id="analogControls" class="analog-container">
+                    <div class="analog-base"></div>
+                    <div class="analog-knob" id="analogKnob"></div>
+                </div>
+                
+                <!-- D-Pad Version (Hidden by default) -->
+                <div id="dpadControls" class="d-pad-v2" style="display: none;">
+                    <div class="d-pad-row">
+                        <button id="upBtnV2" class="dir-btn-v2"><i class="fas fa-arrow-up"></i></button>
+                    </div>
+                    <div class="d-pad-row">
+                        <button id="leftBtnV2" class="dir-btn-v2"><i class="fas fa-arrow-left"></i></button>
+                        <div style="width: 70px;"></div>
+                        <button id="rightBtnV2" class="dir-btn-v2"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                    <div class="d-pad-row">
+                        <button id="downBtnV2" class="dir-btn-v2"><i class="fas fa-arrow-down"></i></button>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons Grid -->
+                <div class="action-grid">
+                    <button id="jumpBtn" class="action-btn-v2 jump">
+                        <i class="fas fa-arrow-up"></i>
+                        <span style="font-size: 0.7rem; position: absolute; bottom: 5px;">Lompat</span>
+                    </button>
+                    <button id="attackBtnV2" class="action-btn-v2 attack">
+                        <i class="fas fa-bolt"></i>
+                        <span style="font-size: 0.7rem; position: absolute; bottom: 5px;">Serang</span>
+                    </button>
+
+                    <!-- TOMBOL JUMP BOOSTER -->
+                <button id="jumpBoosterBtn" class="action-btn-v2 booster" data-count="3">
+                    <i class="fas fa-rocket"></i>
+                    <span class="booster-count">3</span>
+                    <span style="font-size: 0.7rem; position: absolute; bottom: 5px;">Super Jump</span>
+                </button> 
+                    <button id="boomerangBtnV2" class="action-btn-v2 boomerang">
+                        <i class="fas fa-space-shuttle"></i>
+                        <span style="font-size: 0.7rem; position: absolute; bottom: 5px;">Boomerang</span>
+                    </button>
                 </div>
             </div>
+            <!-- ========== END MOBILE CONTROLS ========== -->
         </div>
 
+        <!-- JUMP BOOSTER COUNTER DISPLAY -->
+         <div class="booster-display">
+            <div class="booster-info">
+                <i class="fas fa-rocket"></i>
+                <span id=Jump Booster:></span>
+                <span id="boosterCounter">3</span>
+                <span>/3</span>
+            </div>
+            <button id="useBoosterBtn" class="btn btn-booster">
+                <i class="fas fa-play"></i> Gunakan Super Jump
+            </button>
+         </div>
+
+        <!-- ========== INSTRUCTIONS SECTION ========== -->
         <div class="instructions">
             <h2><i class="fas fa-info-circle"></i> Panduan Game v4.0</h2>
             <div class="instructions-content">
@@ -305,21 +358,228 @@
         }
         
         // =============================================
-        // MOBILE CONTROLS
+        // MOBILE CONTROLS INITIALIZATION
         // =============================================
         
-        document.getElementById('attackBtn').addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            // Trigger attack
-            const event = new KeyboardEvent('keydown', { key: 'z' });
-            document.dispatchEvent(event);
-        });
+        // Setup Mobile Controls
+        function setupMobileControls() {
+            console.log("📱 Setting up mobile controls...");
+            
+            // Control Mode Switching
+            const modeAnalogBtn = document.getElementById('modeAnalog');
+            const modeDPadBtn = document.getElementById('modeDPad');
+            const analogControls = document.getElementById('analogControls');
+            const dpadControls = document.getElementById('dpadControls');
+            
+            if (modeAnalogBtn && modeDPadBtn) {
+                modeAnalogBtn.addEventListener('click', function() {
+                    modeAnalogBtn.classList.add('active');
+                    modeDPadBtn.classList.remove('active');
+                    analogControls.style.display = 'flex';
+                    dpadControls.style.display = 'none';
+                });
+                
+                modeDPadBtn.addEventListener('click', function() {
+                    modeDPadBtn.classList.add('active');
+                    modeAnalogBtn.classList.remove('active');
+                    analogControls.style.display = 'none';
+                    dpadControls.style.display = 'flex';
+                });
+            }
+            
+            // Analog Stick Implementation
+            const analogKnob = document.getElementById('analogKnob');
+            if (analogKnob) {
+                let isDragging = false;
+                let startX, startY;
+                let currentX = 0, currentY = 0;
+                const maxDistance = 40;
+                
+                analogKnob.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    isDragging = true;
+                    const touch = e.touches[0];
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                });
+                
+                analogKnob.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                });
+                
+                document.addEventListener('touchmove', function(e) {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    updateAnalogPosition(touch.clientX, touch.clientY, startX, startY);
+                });
+                
+                document.addEventListener('mousemove', function(e) {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    updateAnalogPosition(e.clientX, e.clientY, startX, startY);
+                });
+                
+                function updateAnalogPosition(clientX, clientY, startX, startY) {
+                    let deltaX = clientX - startX;
+                    let deltaY = clientY - startY;
+                    
+                    // Limit to max distance
+                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    if (distance > maxDistance) {
+                        deltaX = (deltaX / distance) * maxDistance;
+                        deltaY = (deltaY / distance) * maxDistance;
+                    }
+                    
+                    // Update knob position
+                    analogKnob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                    currentX = deltaX;
+                    currentY = deltaY;
+                    
+                    // Update movement keys based on position
+                    updateMovementFromAnalog(deltaX, deltaY, maxDistance);
+                }
+                
+                document.addEventListener('touchend', function() {
+                    if (isDragging) {
+                        isDragging = false;
+                        resetAnalog();
+                    }
+                });
+                
+                document.addEventListener('mouseup', function() {
+                    if (isDragging) {
+                        isDragging = false;
+                        resetAnalog();
+                    }
+                });
+                
+                function resetAnalog() {
+                    analogKnob.style.transform = 'translate(0px, 0px)';
+                    currentX = 0;
+                    currentY = 0;
+                    // Clear movement keys
+                    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowLeft' }));
+                    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight' }));
+                    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp' }));
+                    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowDown' }));
+                }
+                
+                function updateMovementFromAnalog(deltaX, deltaY, maxDistance) {
+                    const threshold = 0.3;
+                    
+                    // Horizontal movement
+                    if (deltaX < -maxDistance * threshold) {
+                        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight' }));
+                    } else if (deltaX > maxDistance * threshold) {
+                        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowLeft' }));
+                    } else {
+                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowLeft' }));
+                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight' }));
+                    }
+                    
+                    // Vertical movement (jump/crouch)
+                    if (deltaY < -maxDistance * threshold) {
+                        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowDown' }));
+                    } else if (deltaY > maxDistance * threshold) {
+                        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp' }));
+                    } else {
+                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp' }));
+                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowDown' }));
+                    }
+                }
+            }
+            
+            // D-Pad Buttons
+            setupDPadButton('leftBtnV2', 'ArrowLeft');
+            setupDPadButton('rightBtnV2', 'ArrowRight');
+            setupDPadButton('upBtnV2', 'ArrowUp');
+            setupDPadButton('downBtnV2', 'ArrowDown');
+            
+            function setupDPadButton(buttonId, key) {
+                const button = document.getElementById(buttonId);
+                if (button) {
+                    button.addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        window.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
+                        this.classList.add('active');
+                    });
+                    
+                    button.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        window.dispatchEvent(new KeyboardEvent('keyup', { key: key }));
+                        this.classList.remove('active');
+                    });
+                    
+                    button.addEventListener('mousedown', function(e) {
+                        e.preventDefault();
+                        window.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
+                        this.classList.add('active');
+                    });
+                    
+                    button.addEventListener('mouseup', function(e) {
+                        e.preventDefault();
+                        window.dispatchEvent(new KeyboardEvent('keyup', { key: key }));
+                        this.classList.remove('active');
+                    });
+                }
+            }
+            
+            // Action Buttons
+            setupActionButton('jumpBtn', ['ArrowUp', ' ', 'x', 'X']);
+            setupActionButton('attackBtnV2', ['z', 'Z']);
+            setupActionButton('boomerangBtnV2', ['z', 'Z']); // Same as attack for boomerang
+            
+            function setupActionButton(buttonId, keys) {
+                const button = document.getElementById(buttonId);
+                if (button) {
+                    button.addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        keys.forEach(key => {
+                            window.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
+                        });
+                        this.classList.add('active');
+                    });
+                    
+                    button.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        keys.forEach(key => {
+                            window.dispatchEvent(new KeyboardEvent('keyup', { key: key }));
+                        });
+                        this.classList.remove('active');
+                    });
+                    
+                    button.addEventListener('mousedown', function(e) {
+                        e.preventDefault();
+                        keys.forEach(key => {
+                            window.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
+                        });
+                        this.classList.add('active');
+                    });
+                    
+                    button.addEventListener('mouseup', function(e) {
+                        e.preventDefault();
+                        keys.forEach(key => {
+                            window.dispatchEvent(new KeyboardEvent('keyup', { key: key }));
+                        });
+                        this.classList.remove('active');
+                    });
+                }
+            }
+            
+            console.log("✅ Mobile controls setup complete!");
+        }
         
-        document.getElementById('boomerangBtn').addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            // Trigger boomerang (same as attack for now)
-            const event = new KeyboardEvent('keydown', { key: 'z' });
-            document.dispatchEvent(event);
+        // Initialize mobile controls when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(setupMobileControls, 1000);
         });
         
         console.log("✅ Sistem suara siap digunakan!");

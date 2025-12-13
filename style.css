@@ -3,9 +3,6 @@
     image-rendering: crisp-edges;
 }
 
-
-
-
 * {
     margin: 0;
     padding: 0;
@@ -214,96 +211,220 @@ header h1 {
     transform: none;
 }
 
+/* ============================================= */
+/* MOBILE CONTROLS - PERBAIKAN */
+/* ============================================= */
+
 .mobile-controls {
     display: none;
     justify-content: space-between;
-    margin-top: 30px;
-    padding: 0 20px;
-    gap: 30px;
-}
-
-.d-pad {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    gap: 8px;
-    width: 180px;
-    height: 180px;
-}
-
-.d-pad-center {
-    grid-column: 2;
-    grid-row: 2;
-    display: flex;
     align-items: center;
+    margin-top: 25px;
+    padding: 20px;
+    gap: 30px;
+    background: rgba(30, 58, 42, 0.9);
+    border-radius: 15px;
+    border: 2px solid #4CAF50;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    min-height: 200px;
+    flex-wrap: wrap;
+}
+
+/* Control Mode Selector */
+.control-mode {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    width: 100%;
     justify-content: center;
 }
 
-.dir-btn {
+.control-mode-btn {
+    padding: 10px 20px;
+    background: rgba(76, 175, 80, 0.3);
+    border: 2px solid #4CAF50;
+    border-radius: 25px;
+    color: #a5d6a7;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: bold;
+    flex: 1;
+    max-width: 150px;
+    text-align: center;
+}
+
+.control-mode-btn.active {
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+    color: white;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+    border-color: #81C784;
+}
+
+.control-mode-btn:hover:not(.active) {
+    background: rgba(76, 175, 80, 0.5);
+    color: white;
+}
+
+/* Analog Stick Container */
+.analog-container {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    order: 1;
+}
+
+/* Outer Circle (Base) */
+.analog-base {
+    width: 120px;
+    height: 120px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    position: absolute;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Inner Circle (Knob) */
+.analog-knob {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+    border-radius: 50%;
+    border: 3px solid white;
+    position: absolute;
+    cursor: move;
+    touch-action: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.1s;
+    z-index: 100;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* D-Pad Version */
+.d-pad-v2 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    order: 1;
+}
+
+.d-pad-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.dir-btn-v2 {
+    width: 70px;
+    height: 70px;
     background: linear-gradient(135deg, #4CAF50, #388E3C);
     border: none;
-    border-radius: 15px;
+    border-radius: 20px;
     color: white;
     font-size: 2rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    user-select: none;
+    -webkit-user-select: none;
+    transition: all 0.1s;
 }
 
-.dir-btn:active {
+.dir-btn-v2:active,
+.dir-btn-v2.active {
     background: linear-gradient(135deg, #388E3C, #2E7D32);
     transform: scale(0.95);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
-#leftBtn {
-    grid-column: 1;
-    grid-row: 2;
-}
-
-#rightBtn {
-    grid-column: 3;
-    grid-row: 2;
-}
-
-#upBtn {
-    grid-column: 2;
-    grid-row: 1;
-}
-
-.action-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+/* Action Buttons Grid */
+.action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 15px;
     align-self: center;
+    order: 2;
 }
 
-.action-btn {
-    width: 90px;
-    height: 90px;
+.action-btn-v2 {
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     border: none;
     color: white;
-    font-size: 2rem;
+    font-size: 1.8rem;
     cursor: pointer;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.1s;
 }
 
-.action-btn {
+.action-btn-v2::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, transparent 30%, rgba(255,255,255,0.1) 70%);
+    border-radius: 50%;
+}
+
+.action-btn-v2.jump {
     background: linear-gradient(135deg, #2196F3, #1976D2);
+    grid-column: 1;
+    grid-row: 1;
 }
 
-.action-btn.boomerang-btn {
+.action-btn-v2.attack {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.action-btn-v2.boomerang {
     background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    grid-column: 1 / span 2;
+    grid-row: 2;
+    width: 90%;
+    justify-self: center;
+    border-radius: 40px;
+    font-size: 1.5rem;
 }
 
-.action-btn:active {
+.action-btn-v2:active,
+.action-btn-v2.active {
     transform: scale(0.95);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
+
+.action-btn-v2 span {
+    font-size: 0.7rem;
+    position: absolute;
+    bottom: 5px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================= */
+/* INSTRUCTIONS SECTION */
+/* ============================================= */
 
 .instructions {
     background: linear-gradient(135deg, #2d4a3a, #1e3a2a);
@@ -669,7 +790,298 @@ footer {
     transform: translateY(1px);
 }
 
-/* Responsive design */
+/* ============================================= */
+/* RESPONSIVE DESIGN - MOBILE CONTROLS */
+/* ============================================= */
+
+/* Hide mobile controls on desktop */
+@media (min-width: 769px) {
+    .mobile-controls {
+        display: none !important;
+    }
+}
+
+/* Tablet and Mobile */
+@media (max-width: 768px) {
+    .mobile-controls {
+        display: flex;
+    }
+    
+    #gameCanvas {
+        height: 400px;
+    }
+    
+    header h1 {
+        font-size: 2.2rem;
+    }
+    
+    .subtitle {
+        font-size: 1.1rem;
+    }
+    
+    .stat {
+        min-width: 100px;
+        padding: 8px 15px;
+        font-size: 1rem;
+    }
+    
+    .level-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .instructions-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .popup-btn {
+        min-width: 150px;
+        padding: 12px 25px;
+    }
+}
+
+/* Tablet Landscape */
+@media (max-width: 1024px) and (orientation: landscape) {
+    .mobile-controls {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        min-height: 140px;
+        padding: 15px;
+    }
+    
+    .control-mode {
+        flex-direction: column;
+        width: auto;
+        margin-bottom: 0;
+        gap: 10px;
+        order: 3;
+    }
+    
+    .control-mode-btn {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+        max-width: 120px;
+    }
+    
+    .analog-container, .d-pad-v2 {
+        order: 1;
+    }
+    
+    .action-grid {
+        order: 2;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: 1fr;
+        gap: 10px;
+    }
+    
+    .action-btn-v2.jump {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    
+    .action-btn-v2.attack {
+        grid-column: 2;
+        grid-row: 1;
+    }
+    
+    .action-btn-v2.boomerang {
+        grid-column: 3;
+        grid-row: 1;
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+    }
+    
+    #gameCanvas {
+        height: 350px !important;
+    }
+}
+
+/* Mobile Phones Portrait */
+@media (max-width: 768px) and (orientation: portrait) {
+    .mobile-controls {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .control-mode {
+        order: 1;
+    }
+    
+    .analog-container, .d-pad-v2 {
+        order: 2;
+    }
+    
+    .action-grid {
+        order: 3;
+    }
+    
+    .analog-container {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .analog-base {
+        width: 110px;
+        height: 110px;
+    }
+    
+    .analog-knob {
+        width: 55px;
+        height: 55px;
+    }
+    
+    .action-btn-v2 {
+        width: 75px;
+        height: 75px;
+        font-size: 1.6rem;
+    }
+    
+    .dir-btn-v2 {
+        width: 65px;
+        height: 65px;
+        font-size: 1.7rem;
+    }
+    
+    #gameCanvas {
+        height: 350px !important;
+    }
+}
+
+/* Small Phones */
+@media (max-width: 480px) {
+    .mobile-controls {
+        padding: 15px;
+        gap: 15px;
+        min-height: 180px;
+    }
+    
+    .control-mode {
+        gap: 10px;
+    }
+    
+    .control-mode-btn {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        max-width: 130px;
+    }
+    
+    .analog-container {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .analog-base {
+        width: 90px;
+        height: 90px;
+    }
+    
+    .analog-knob {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .action-btn-v2 {
+        width: 65px;
+        height: 65px;
+        font-size: 1.4rem;
+    }
+    
+    .action-btn-v2 span {
+        font-size: 0.6rem;
+        bottom: 3px;
+    }
+    
+    .dir-btn-v2 {
+        width: 55px;
+        height: 55px;
+        font-size: 1.4rem;
+    }
+    
+    #gameCanvas {
+        height: 300px !important;
+    }
+    
+    .action-btn-v2.boomerang {
+        font-size: 1.2rem;
+        border-radius: 35px;
+    }
+    
+    .level-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stat {
+        min-width: 80px;
+        font-size: 0.9rem;
+        padding: 6px 10px;
+    }
+    
+    .controls-info {
+        font-size: 0.8rem;
+    }
+    
+    .controls-info span {
+        padding: 6px 8px;
+    }
+    
+    header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .level-complete-popup h2 {
+        font-size: 2rem;
+    }
+    
+    .level-complete-popup .stats div {
+        font-size: 1rem;
+    }
+}
+
+/* Extra Small Phones */
+@media (max-width: 360px) {
+    .mobile-controls {
+        padding: 12px;
+        gap: 12px;
+    }
+    
+    .analog-container {
+        width: 110px;
+        height: 110px;
+    }
+    
+    .analog-base {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .analog-knob {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .action-btn-v2 {
+        width: 60px;
+        height: 60px;
+        font-size: 1.3rem;
+    }
+    
+    .dir-btn-v2 {
+        width: 50px;
+        height: 50px;
+        font-size: 1.3rem;
+    }
+    
+    #gameCanvas {
+        height: 280px !important;
+    }
+    
+    .control-mode-btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Responsive design lainnya */
 @media (max-width: 1100px) {
     .container {
         max-width: 95%;
@@ -712,43 +1124,6 @@ footer {
     }
 }
 
-@media (max-width: 768px) {
-    .mobile-controls {
-        display: flex;
-    }
-    
-    #gameCanvas {
-        height: 400px;
-    }
-    
-    header h1 {
-        font-size: 2.2rem;
-    }
-    
-    .subtitle {
-        font-size: 1.1rem;
-    }
-    
-    .stat {
-        min-width: 100px;
-        padding: 8px 15px;
-        font-size: 1rem;
-    }
-    
-    .level-buttons {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .instructions-content {
-        grid-template-columns: 1fr;
-    }
-    
-    .popup-btn {
-        min-width: 150px;
-        padding: 12px 25px;
-    }
-}
-
 @media (max-width: 600px) {
     .level-buttons {
         grid-template-columns: repeat(2, 1fr);
@@ -784,49 +1159,6 @@ footer {
     }
 }
 
-@media (max-width: 480px) {
-    .level-buttons {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .stat {
-        min-width: 80px;
-        font-size: 0.9rem;
-        padding: 6px 10px;
-    }
-    
-    .controls-info {
-        font-size: 0.8rem;
-    }
-    
-    .controls-info span {
-        padding: 6px 8px;
-    }
-    
-    .d-pad {
-        width: 150px;
-        height: 150px;
-    }
-    
-    .action-btn {
-        width: 70px;
-        height: 70px;
-        font-size: 1.5rem;
-    }
-    
-    header h1 {
-        font-size: 1.8rem;
-    }
-    
-    .level-complete-popup h2 {
-        font-size: 2rem;
-    }
-    
-    .level-complete-popup .stats div {
-        font-size: 1rem;
-    }
-}
-
 @media (max-width: 400px) {
     .level-buttons {
         grid-template-columns: repeat(2, 1fr);
@@ -841,22 +1173,273 @@ footer {
         width: 100%;
         max-width: 300px;
     }
-    
-    .mobile-controls {
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
+}
+
+/* Touch device optimization */
+@media (hover: none) and (pointer: coarse) {
+    .dir-btn-v2,
+    .action-btn-v2,
+    .control-mode-btn {
+        min-height: 44px; /* Minimum touch target size */
     }
     
-    .d-pad {
-        width: 180px;
-        height: 180px;
+    .action-btn-v2 {
+        min-width: 44px;
     }
     
-    .action-buttons {
-        flex-direction: row;
-        gap: 30px;
+    .btn {
+        min-height: 50px;
     }
 }
 
+/* Animations untuk feedback */
+@keyframes buttonPress {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
 
+@keyframes glow {
+    0% { box-shadow: 0 0 5px rgba(76, 175, 80, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(76, 175, 80, 0.8); }
+    100% { box-shadow: 0 0 5px rgba(76, 175, 80, 0.5); }
+}
+
+@keyframes pulseAnalog {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.analog-knob.active {
+    animation: pulseAnalog 0.5s infinite;
+}
+
+.control-mode-btn.active {
+    animation: glow 2s infinite;
+}
+
+.dir-btn-v2:active {
+    animation: buttonPress 0.1s;
+}
+
+.action-btn-v2:active {
+    animation: buttonPress 0.1s;
+}
+
+/* ============================================= */
+/* JUMP BOOSTER STYLES */
+/* ============================================= */
+
+/* Booster Button di Mobile Controls */
+.action-btn-v2.booster {
+    background: linear-gradient(135deg, #FF5722, #E64A19) !important;
+    border: 2px solid #FFCCBC !important;
+    position: relative;
+}
+
+.action-btn-v2.booster:disabled {
+    background: linear-gradient(135deg, #888, #666) !important;
+    border-color: #aaa !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.action-btn-v2.booster:disabled .booster-count {
+    color: #ccc !important;
+}
+
+.action-btn-v2.booster .booster-count {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #FFD700;
+    font-weight: bold;
+    font-size: 0.9rem;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #FFD700;
+}
+
+/* Booster Display untuk Desktop */
+.booster-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(30, 58, 42, 0.9);
+    padding: 12px 20px;
+    border-radius: 10px;
+    margin-top: 15px;
+    border: 2px solid #FF5722;
+    box-shadow: 0 4px 10px rgba(255, 87, 34, 0.2);
+}
+
+.booster-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    color: #FFD700;
+    font-weight: bold;
+}
+
+.booster-info i {
+    color: #FF5722;
+    font-size: 1.3rem;
+}
+
+#boosterCounter {
+    color: #FFD700;
+    font-size: 1.4rem;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Tombol Booster untuk Desktop */
+.btn-booster {
+    background: linear-gradient(135deg, #FF5722, #E64A19) !important;
+    border-color: #FFCCBC !important;
+    color: white !important;
+    min-width: 200px;
+}
+
+.btn-booster:disabled {
+    background: linear-gradient(135deg, #888, #666) !important;
+    border-color: #aaa !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.btn-booster i {
+    color: #FFD700;
+}
+
+/* Booster Notification */
+.booster-notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: rgba(255, 87, 34, 0.95);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    animation: slideInRight 0.3s ease-out;
+    max-width: 300px;
+}
+
+.booster-notification.warning {
+    background: rgba(255, 193, 7, 0.95);
+    color: #333;
+}
+
+.booster-notification.error {
+    background: rgba(244, 67, 54, 0.95);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Booster Effect Animation */
+.booster-effect {
+    animation: boosterGlow 0.5s infinite alternate;
+}
+
+@keyframes boosterGlow {
+    from {
+        box-shadow: 0 0 10px rgba(255, 87, 34, 0.7);
+        transform: scale(1);
+    }
+    to {
+        box-shadow: 0 0 20px rgba(255, 87, 34, 1);
+        transform: scale(1.05);
+    }
+}
+
+/* Booster Charging Animation */
+.booster-charging .booster-count {
+    animation: pulseCharge 1s infinite;
+}
+
+@keyframes pulseCharge {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* Responsive untuk Booster Display */
+@media (max-width: 768px) {
+    .booster-display {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .booster-info {
+        font-size: 1rem;
+    }
+    
+    .btn-booster {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    /* Sembunyikan tombol booster desktop di mobile */
+    .booster-display .btn-booster {
+        display: none;
+    }
+}
+
+@media (min-width: 769px) {
+    /* Sembunyikan tombol booster di mobile controls saat desktop */
+    .action-btn-v2.booster {
+        display: none !important;
+    }
+}
+
+/* Layout khusus untuk landscape mode */
+@media (max-width: 1024px) and (orientation: landscape) {
+    .action-btn-v2.booster {
+        grid-column: 3;
+        grid-row: 1;
+    }
+    
+    .action-btn-v2.boomerang {
+        grid-column: 4;
+        grid-row: 1;
+    }
+}
+
+/* Efek visual saat menggunakan booster */
+.booster-active {
+    filter: drop-shadow(0 0 10px rgba(255, 87, 34, 0.8));
+}
