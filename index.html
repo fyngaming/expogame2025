@@ -71,6 +71,9 @@
                 <button id="fullscreenBtn" class="btn btn-fullscreen">
                     <i class="fas fa-expand"></i> Layar Penuh
                 </button>
+                <button id="menuBtn" class="btn btn-menu">
+                    <i class="fas fa-home"></i> Menu Utama
+                </button>
                 <!-- TOMBOL LEVEL BERIKUTNYA -->
                 <button id="nextLevelBtn" class="btn btn-next" style="display: none;">
                     <i class="fas fa-forward"></i> Level Berikutnya
@@ -126,11 +129,11 @@
                     </button>
 
                     <!-- TOMBOL JUMP BOOSTER -->
-                <button id="jumpBoosterBtn" class="action-btn-v2 booster" data-count="3">
-                    <i class="fas fa-rocket"></i>
-                    <span class="booster-count">3</span>
-                    <span style="font-size: 0.7rem; position: absolute; bottom: 5px;">Super Jump</span>
-                </button> 
+                    <button id="jumpBoosterBtn" class="action-btn-v2 booster" data-count="3">
+                        <i class="fas fa-rocket"></i>
+                        <span class="booster-count">3</span>
+                        <span style="font-size: 0.7rem; position: absolute; bottom: 5px;">Super Jump</span>
+                    </button> 
                     <button id="boomerangBtnV2" class="action-btn-v2 boomerang">
                         <i class="fas fa-space-shuttle"></i>
                         <span style="font-size: 0.7rem; position: absolute; bottom: 5px;">Boomerang</span>
@@ -141,17 +144,17 @@
         </div>
 
         <!-- JUMP BOOSTER COUNTER DISPLAY -->
-         <div class="booster-display">
+        <div class="booster-display">
             <div class="booster-info">
                 <i class="fas fa-rocket"></i>
-                <span id=Jump Booster:></span>
+                <span>Jump Booster:</span>
                 <span id="boosterCounter">3</span>
                 <span>/3</span>
             </div>
             <button id="useBoosterBtn" class="btn btn-booster">
                 <i class="fas fa-play"></i> Gunakan Super Jump
             </button>
-         </div>
+        </div>
 
         <!-- ========== INSTRUCTIONS SECTION ========== -->
         <div class="instructions">
@@ -341,10 +344,42 @@
             }
         });
         
-        // Update tombol fullscreen ketika status berubah
-        document.addEventListener('fullscreenchange', updateFullscreenButton);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
-        document.addEventListener('msfullscreenchange', updateFullscreenButton);
+        // =============================================
+        // MOBILE CONTROLS POSITIONING IN FULLSCREEN
+        // =============================================
+        
+        function positionMobileControlsInFullscreen() {
+            const mobileControls = document.querySelector('.mobile-controls');
+            const canvas = document.getElementById('gameCanvas');
+            
+            if (!mobileControls || !canvas) return;
+            
+            if (document.fullscreenElement || 
+                document.webkitFullscreenElement || 
+                document.msFullscreenElement) {
+                // Saat fullscreen, posisikan mobile controls di bawah canvas
+                mobileControls.style.position = 'fixed';
+                mobileControls.style.bottom = '20px';
+                mobileControls.style.left = '50%';
+                mobileControls.style.transform = 'translateX(-50%)';
+                mobileControls.style.zIndex = '1000';
+                mobileControls.style.background = 'rgba(30, 58, 42, 0.95)';
+                mobileControls.style.border = '3px solid #4CAF50';
+                mobileControls.style.boxShadow = '0 0 20px rgba(76, 175, 80, 0.5)';
+                mobileControls.classList.add('fullscreen-position');
+            } else {
+                // Saat keluar fullscreen, kembalikan ke posisi semula
+                mobileControls.style.position = '';
+                mobileControls.style.bottom = '';
+                mobileControls.style.left = '';
+                mobileControls.style.transform = '';
+                mobileControls.style.zIndex = '';
+                mobileControls.style.background = '';
+                mobileControls.style.border = '';
+                mobileControls.style.boxShadow = '';
+                mobileControls.classList.remove('fullscreen-position');
+            }
+        }
         
         function updateFullscreenButton() {
             const btn = document.getElementById('fullscreenBtn');
@@ -352,10 +387,33 @@
                 document.webkitFullscreenElement || 
                 document.msFullscreenElement) {
                 btn.innerHTML = '<i class="fas fa-compress"></i> Keluar Fullscreen';
+                positionMobileControlsInFullscreen();
             } else {
                 btn.innerHTML = '<i class="fas fa-expand"></i> Layar Penuh';
+                positionMobileControlsInFullscreen();
             }
         }
+        
+        // Tambahkan event listener untuk fullscreen change
+        document.addEventListener('fullscreenchange', function() {
+            positionMobileControlsInFullscreen();
+            updateFullscreenButton();
+        });
+        
+        document.addEventListener('webkitfullscreenchange', function() {
+            positionMobileControlsInFullscreen();
+            updateFullscreenButton();
+        });
+        
+        document.addEventListener('msfullscreenchange', function() {
+            positionMobileControlsInFullscreen();
+            updateFullscreenButton();
+        });
+        
+        // Panggil fungsi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(positionMobileControlsInFullscreen, 100);
+        });
         
         // =============================================
         // MOBILE CONTROLS INITIALIZATION
@@ -537,6 +595,22 @@
             setupActionButton('attackBtnV2', ['z', 'Z']);
             setupActionButton('boomerangBtnV2', ['z', 'Z']); // Same as attack for boomerang
             
+            // Jump Booster Button
+            const jumpBoosterBtn = document.getElementById('jumpBoosterBtn');
+            if (jumpBoosterBtn) {
+                jumpBoosterBtn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'b' }));
+                    this.classList.add('active');
+                });
+                
+                jumpBoosterBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'b' }));
+                    this.classList.remove('active');
+                });
+            }
+            
             function setupActionButton(buttonId, keys) {
                 const button = document.getElementById(buttonId);
                 if (button) {
@@ -584,6 +658,14 @@
         
         console.log("✅ Sistem suara siap digunakan!");
         console.log("🎮 Tekan tombol 'Suara' untuk mengaktifkan musik background");
+        
+        // =============================================
+        // TOMBOL MENU UTAMA
+        // =============================================
+        document.getElementById('menuBtn').addEventListener('click', function() {
+            console.log("🏠 Tombol Menu Utama diklik");
+            // Event ini akan ditangani oleh game.js
+        });
     </script>
 </body>
 </html>

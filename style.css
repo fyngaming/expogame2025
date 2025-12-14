@@ -1,3 +1,4 @@
+/* style.css */
 .pixelated {
     image-rendering: pixelated;
     image-rendering: crisp-edges;
@@ -196,6 +197,11 @@ header h1 {
     border: 2px solid #FFCCBC;
 }
 
+.btn-menu {
+    background: linear-gradient(135deg, #607D8B, #455A64);
+    color: white;
+}
+
 .btn:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
@@ -228,6 +234,22 @@ header h1 {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     min-height: 200px;
     flex-wrap: wrap;
+    transition: all 0.3s ease;
+}
+
+/* Mobile controls saat fullscreen */
+.mobile-controls.fullscreen-position {
+    position: fixed !important;
+    bottom: 30px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 1000 !important;
+    background: rgba(30, 58, 42, 0.95) !important;
+    border: 3px solid #4CAF50 !important;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.5) !important;
+    backdrop-filter: blur(5px);
+    min-width: 90%;
+    max-width: 800px;
 }
 
 /* Control Mode Selector */
@@ -395,14 +417,17 @@ header h1 {
     grid-row: 1;
 }
 
+.action-btn-v2.booster {
+    background: linear-gradient(135deg, #FF5722, #E64A19);
+    border: 2px solid #FFCCBC;
+    grid-column: 1;
+    grid-row: 2;
+}
+
 .action-btn-v2.boomerang {
     background: linear-gradient(135deg, #9C27B0, #7B1FA2);
-    grid-column: 1 / span 2;
+    grid-column: 2;
     grid-row: 2;
-    width: 90%;
-    justify-self: center;
-    border-radius: 40px;
-    font-size: 1.5rem;
 }
 
 .action-btn-v2:active,
@@ -837,6 +862,41 @@ footer {
         min-width: 150px;
         padding: 12px 25px;
     }
+    
+    /* Mobile controls saat fullscreen di mobile */
+    .mobile-controls.fullscreen-position {
+        bottom: 10px !important;
+        padding: 10px !important;
+        gap: 15px !important;
+        min-height: 150px !important;
+    }
+    
+    .analog-container {
+        width: 120px !important;
+        height: 120px !important;
+    }
+    
+    .analog-base {
+        width: 90px !important;
+        height: 90px !important;
+    }
+    
+    .analog-knob {
+        width: 45px !important;
+        height: 45px !important;
+    }
+    
+    .action-btn-v2 {
+        width: 60px !important;
+        height: 60px !important;
+        font-size: 1.2rem !important;
+    }
+    
+    .dir-btn-v2 {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1.2rem !important;
+    }
 }
 
 /* Tablet Landscape */
@@ -883,8 +943,16 @@ footer {
         grid-row: 1;
     }
     
-    .action-btn-v2.boomerang {
+    .action-btn-v2.booster {
         grid-column: 3;
+        grid-row: 1;
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+    }
+    
+    .action-btn-v2.boomerang {
+        grid-column: 4;
         grid-row: 1;
         width: 70px;
         height: 70px;
