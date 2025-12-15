@@ -66,200 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========== FULLSCREEN GAME STATE ==========
     let fullscreenGameActive = false;
     let originalGameState = null;
-    // =============================================
-// FULLSCREEN GAME MODE FUNCTIONS
-// =============================================
 
-let isFullscreenGameMode = false;
-
-function startFullscreenGameMode() {
-    console.log("🚀 Starting fullscreen game mode...");
-    
-    // 1. Tampilkan fullscreen container
-    const fullscreenMode = document.getElementById('fullscreenGameMode');
-    if (!fullscreenMode) {
-        console.error("❌ Fullscreen mode container not found!");
-        return;
-    }
-    
-    fullscreenMode.classList.add('active');
-    isFullscreenGameMode = true;
-    
-    // 2. Setup canvas untuk fullscreen
-    const canvas = document.getElementById('gameCanvas');
-    if (canvas) {
-        // Set canvas size untuk fill container
-        const gameArea = document.querySelector('.fullscreen-game-area');
-        if (gameArea) {
-            canvas.width = gameArea.clientWidth;
-            canvas.height = gameArea.clientHeight;
-        }
-    }
-    
-    // 3. Force landscape di mobile
-    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-        console.log("📱 Mobile device detected - forcing landscape");
-        fullscreenMode.classList.add('force-landscape');
-    }
-    
-    // 4. Update UI stats untuk fullscreen
-    updateFullscreenUI();
-    
-    // 5. Setup event listeners untuk fullscreen
-    setupFullscreenEventListeners();
-    
-    // 6. Mulai game jika belum berjalan
-    if (!gameState.running) {
-        startGame();
-    }
-    
-    console.log("✅ Fullscreen game mode started!");
-}
-
-function exitFullscreenGameMode() {
-    console.log("🚪 Exiting fullscreen game mode...");
-    
-    const fullscreenMode = document.getElementById('fullscreenGameMode');
-    if (fullscreenMode) {
-        fullscreenMode.classList.remove('active');
-        fullscreenMode.classList.remove('force-landscape');
-        isFullscreenGameMode = false;
-        
-        // Kembalikan ke menu utama
-        returnToMainMenu();
-    }
-}
-
-function updateFullscreenUI() {
-    // Update stats di header fullscreen
-    updateFullscreenStats();
-    
-    // Update tombol-tombol kontrol
-    updateFullscreenControls();
-}
-
-function updateFullscreenStats() {
-    const stats = {
-        lives: document.getElementById('fsLives'),
-        score: document.getElementById('fsScore'),
-        level: document.getElementById('fsLevel'),
-        timer: document.getElementById('fsTimer'),
-        booster: document.getElementById('fsBooster')
-    };
-    
-    if (stats.lives) {
-        stats.lives.innerHTML = `<i class="fas fa-heart"></i> ${gameState.lives}`;
-    }
-    
-    if (stats.score) {
-        stats.score.innerHTML = `<i class="fas fa-star"></i> ${gameState.score}`;
-    }
-    
-    if (stats.level) {
-        stats.level.innerHTML = `<i class="fas fa-flag"></i> Level ${gameState.currentLevel}`;
-    }
-    
-    if (stats.timer) {
-        stats.timer.innerHTML = `<i class="fas fa-clock"></i> ${Math.floor(gameState.timeLeft)}s`;
-    }
-    
-    if (stats.booster && player) {
-        stats.booster.innerHTML = `<i class="fas fa-rocket"></i> ${player.jumpBoosterChargesThisLife}`;
-    }
-}
-
-function updateFullscreenControls() {
-    // Update state tombol di fullscreen
-    const pauseBtn = document.getElementById('fsPause');
-    if (pauseBtn) {
-        if (gameState.paused) {
-            pauseBtn.innerHTML = '<i class="fas fa-play"></i> Lanjut';
-        } else {
-            pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Jeda';
-        }
-    }
-    
-    // Update sound button
-    const soundBtn = document.querySelector('#fullscreenControls .btn:nth-child(3)');
-    if (soundBtn) {
-        const audio = document.getElementById('backgroundMusic');
-        if (audio && audio.paused) {
-            soundBtn.innerHTML = '<i class="fas fa-volume-mute"></i> Suara';
-        } else {
-            soundBtn.innerHTML = '<i class="fas fa-volume-up"></i> Suara';
-        }
-    }
-}
-
-function setupFullscreenEventListeners() {
-    // Tombol keluar
-    const exitBtn = document.getElementById('fsExitBtn');
-    if (exitBtn) {
-        exitBtn.addEventListener('click', exitFullscreenGameMode);
-    }
-    
-    // Tombol pause
-    const pauseBtn = document.getElementById('fsPause');
-    if (pauseBtn) {
-        pauseBtn.addEventListener('click', function() {
-            togglePause();
-            updateFullscreenControls();
-        });
-    }
-    
-    // Tombol reset
-    const resetBtn = document.getElementById('fsReset');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', restartGame);
-    }
-    
-    // Tombol sound
-    const soundBtn = document.querySelector('#fullscreenControls .btn:nth-child(3)');
-    if (soundBtn) {
-        soundBtn.addEventListener('click', function() {
-            const audio = document.getElementById('backgroundMusic');
-            if (audio) {
-                if (audio.paused) {
-                    audio.play();
-                    this.innerHTML = '<i class="fas fa-volume-up"></i> Suara';
-                } else {
-                    audio.pause();
-                    this.innerHTML = '<i class="fas fa-volume-mute"></i> Suara';
-                }
-            }
-        });
-    }
-    
-    // Tombol booster
-    const boosterBtn = document.getElementById('fsBoosterBtn');
-    if (boosterBtn) {
-        boosterBtn.addEventListener('click', function() {
-            if (player && player.useJumpBooster) {
-                player.useJumpBooster();
-                updateFullscreenStats();
-            }
-        });
-    }
-    
-    // Tombol attack
-    const attackBtn = document.getElementById('fsAttack');
-    if (attackBtn) {
-        attackBtn.addEventListener('click', function() {
-            if (player.hasBoomerang) {
-                throwBoomerang();
-            } else {
-                performMeleeAttack();
-            }
-        });
-    }
-}
-
-// Panggil update stats secara berkala
-setInterval(function() {
-    if (isFullscreenGameMode) {
-        updateFullscreenStats();
-    }
-}, 1000);
     // ========== DEBUG VARIABLES ==========
     let showDebugInfo = false;
     
@@ -1841,6 +1648,7 @@ function setupFullscreenControls() {
         
         const config = levelConfigs[level];
         gameState.currentLevel = level;
+        gameState.scoreBeforeLevel = gameState.score; // <-- PERBAIKAN: Simpan skor sebelum level dimulai
         gameState.timeLeft = config.time;
         gameState.lives = Math.min(5 + Math.floor(level/2), 10);
         gameState.win = false;
@@ -4083,8 +3891,46 @@ function setupFullscreenControls() {
     }
     
     function restartGame() {
-        console.log("🔄 Restarting game...");
+        console.log("🔄 [RESTART GAME] Memulai ulang permainan dari awal (Level 1)...");
+        
+        // 1. Hentikan loop game saat ini dan reset state fundamental
+        gameState.running = false;
+        gameState.paused = false;
+        gameState.gameOver = false; // <-- Reset PENTING untuk mencegah blank screen
+        gameState.win = false;
+        gameState.showLevelTransition = false;
+        
+        // 2. Reset progres game
         gameState.score = 0;
+        gameState.lives = 5;
+        gameState.currentLevel = 1;
+        gameState.unlockedLevel = 1;
+        gameState.timeLeft = levelConfigs[1].time;
+        
+        // 3. Reset player dan booster
+        player.resetJumpBoosterForGameOver();
+        
+        // 4. Muat ulang konfigurasi Level 1
+        setupLevel(1);
+        
+        // 5. Hapus popup dari DOM untuk memastikan tidak ada yang tumpang tindih
+        document.querySelectorAll('.overlay, .level-complete-popup, .game-over-popup').forEach(el => el.remove());
+        
+        // 6. Mulai game dengan state yang sudah bersih
+        startGame();
+        hideNextLevelButton();
+        updateLevelButtons();
+        
+        console.log(`✅ Game restarted! Jump booster: ${player.jumpBoosterCharges} charges`);
+    }
+    
+    function retryCurrentLevel() {
+        console.log(`🔄 Mencoba lagi Level ${gameState.currentLevel}...`);
+        
+        // Kembalikan skor ke nilai sebelum level ini dimulai
+        gameState.score = gameState.scoreBeforeLevel;
+        
+        // Reset nyawa dan status game
         gameState.lives = 5;
         gameState.timeLeft = levelConfigs[gameState.currentLevel].time;
         gameState.gameOver = false;
@@ -4093,12 +3939,8 @@ function setupFullscreenControls() {
         gameState.gameStarted = true;
         
         player.resetJumpBoosterForGameOver();
-        
-        setupLevel(gameState.currentLevel);
+        setupLevel(gameState.currentLevel); // Setup ulang level saat ini
         startGame();
-        hideNextLevelButton();
-        
-        console.log(`✅ Game restarted! Jump booster: ${player.jumpBoosterCharges} charges`);
     }
     
     function togglePause() {
@@ -4135,30 +3977,36 @@ function setupFullscreenControls() {
     }
     
     function returnToMainMenu() {
-        console.log("🏠 Returning to main menu...");
+        console.log("🏠 [MAIN MENU] Kembali ke menu utama...");
+        
+        // 1. Hentikan semua aktivitas game
         gameState.running = false;
-        gameState.gameStarted = false;
-        gameState.gameOver = false;
+        gameState.gameStarted = false; // <-- Kunci untuk menampilkan start screen
+        gameState.gameOver = false; // <-- Reset PENTING untuk mencegah blank screen
         gameState.win = false;
         gameState.paused = false;
         gameState.showLevelTransition = false;
         
+        // 2. Hapus semua popup dari DOM untuk mencegah tumpang tindih
+        document.querySelectorAll('.overlay, .level-complete-popup, .game-over-popup').forEach(el => el.remove());
+        
+        // 3. Reset UI ke kondisi awal
         const startBtn = document.getElementById('startBtn');
-        if (startBtn) {
-            startBtn.innerHTML = '<i class="fas fa-play"></i> Mulai Game';
-        }
-        
+        if (startBtn) startBtn.innerHTML = '<i class="fas fa-play"></i> Mulai Game';
         const pauseBtn = document.getElementById('pauseBtn');
-        if (pauseBtn) {
-            pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Jeda';
-            pauseBtn.disabled = true;
-        }
-        
+        if (pauseBtn) pauseBtn.disabled = true;
         hideNextLevelButton();
+        
+        // 4. Reset progres game ke nilai default
+        gameState.score = 0;
+        gameState.currentLevel = 1;
+        gameState.unlockedLevel = 1;
+        
+        // 5. Update UI stats dan tombol level
         updateGameStats();
+        updateLevelButtons();
         
-        setupLevel(1);
-        
+        // 6. Karena gameStarted = false, game loop akan otomatis memanggil drawStartScreen().
         console.log("✅ Returned to main menu!");
     }
     
@@ -4993,13 +4841,67 @@ function setupFullscreenControls() {
         gameState.gameOver = true;
         gameState.running = false;
         
-        player.resetJumpBoosterForGameOver();
+        console.log(`💀 GAME OVER! Skor: ${gameState.score}, Level: ${gameState.currentLevel}`);
+        player.resetJumpBoosterForGameOver(); // Reset booster untuk game baru
         
-        setTimeout(() => {
-            alert(`Game Over!\nSkor akhir: ${gameState.score}\nLevel yang dicapai: ${gameState.currentLevel}\n\nJump Booster telah direset ke 3 charges untuk permainan baru.`);
-        }, 500);
+        // Tampilkan popup game over alih-alih alert
+        showGameOverPopup();
     }
     
+    // ========== FUNGSI POPUP GAME OVER ==========
+    function showGameOverPopup() {
+        let popup = document.querySelector('.game-over-popup');
+        let overlay = document.querySelector('.overlay');
+
+        if (!popup) {
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'overlay';
+                document.body.appendChild(overlay);
+            }
+
+            popup = document.createElement('div');
+            popup.className = 'level-complete-popup game-over-popup'; // Re-use a lot of the styles
+            document.body.appendChild(popup);
+        }
+
+        popup.innerHTML = `
+            <h2 class="game-over-title"><i class="fas fa-skull-crossbones"></i> WADUH, ANDA GAGAL!</h2>
+            <p class="game-over-subtitle">Petualangan Koko harus terhenti di sini...</p>
+            <div class="stats">
+                <div>Level Tercapai: <span>${gameState.currentLevel}</span></div>
+                <div>Skor Akhir: <span>${gameState.score}</span></div>
+            </div>
+            <div class="popup-buttons">
+                <button class="popup-btn retry">
+                    <i class="fas fa-redo"></i> Coba Lagi
+                </button>
+                <button class="popup-btn menu">
+                    <i class="fas fa-home"></i> Menu Utama
+                </button>
+            </div>
+        `;
+
+        // Tampilkan overlay dan popup
+        overlay.classList.add('show');
+        popup.classList.add('show');
+
+        // Event listeners untuk tombol
+        popup.querySelector('.popup-btn.retry').addEventListener('click', () => {
+            overlay.classList.remove('show');
+            popup.classList.remove('show');
+            // Panggil restartGame() untuk memulai ulang permainan dari awal (Level 1).
+            restartGame();
+        });
+
+        popup.querySelector('.popup-btn.menu').addEventListener('click', () => {
+            overlay.classList.remove('show');
+            popup.classList.remove('show');
+            returnToMainMenu();
+        });
+    }
+
+
     // ========== UI FUNCTIONS ==========
     function updateGameStats() {
         const livesEl = document.getElementById('lives');
@@ -5216,16 +5118,6 @@ function setupFullscreenControls() {
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        if (!gameState.gameStarted) {
-            drawStartScreen();
-            return;
-        }
-        
-        if (gameState.gameOver) {
-            drawGameOverScreen();
-            return;
-        }
-        
         if (gameState.win && !gameState.showLevelTransition) {
             drawGameCompleteScreen();
             return;
@@ -5235,6 +5127,17 @@ function setupFullscreenControls() {
             drawLevelTransition();
             return;
         }
+        
+        // Logika utama untuk menggambar:
+        // Jika game belum dimulai, gambar layar awal.
+        // Jika sudah, gambar elemen-elemen game.
+        if (!gameState.gameStarted) {
+            drawStartScreen();
+            return;
+        }
+        
+        // Jika gameOver, popup DOM akan muncul. Canvas tidak perlu menggambar apa-apa lagi
+        if (gameState.gameOver) return;
         
         ctx.save();
         ctx.translate(-gameState.camera.x, -gameState.camera.y);
