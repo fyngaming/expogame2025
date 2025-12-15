@@ -66,7 +66,200 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========== FULLSCREEN GAME STATE ==========
     let fullscreenGameActive = false;
     let originalGameState = null;
+    // =============================================
+// FULLSCREEN GAME MODE FUNCTIONS
+// =============================================
 
+let isFullscreenGameMode = false;
+
+function startFullscreenGameMode() {
+    console.log("🚀 Starting fullscreen game mode...");
+    
+    // 1. Tampilkan fullscreen container
+    const fullscreenMode = document.getElementById('fullscreenGameMode');
+    if (!fullscreenMode) {
+        console.error("❌ Fullscreen mode container not found!");
+        return;
+    }
+    
+    fullscreenMode.classList.add('active');
+    isFullscreenGameMode = true;
+    
+    // 2. Setup canvas untuk fullscreen
+    const canvas = document.getElementById('gameCanvas');
+    if (canvas) {
+        // Set canvas size untuk fill container
+        const gameArea = document.querySelector('.fullscreen-game-area');
+        if (gameArea) {
+            canvas.width = gameArea.clientWidth;
+            canvas.height = gameArea.clientHeight;
+        }
+    }
+    
+    // 3. Force landscape di mobile
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        console.log("📱 Mobile device detected - forcing landscape");
+        fullscreenMode.classList.add('force-landscape');
+    }
+    
+    // 4. Update UI stats untuk fullscreen
+    updateFullscreenUI();
+    
+    // 5. Setup event listeners untuk fullscreen
+    setupFullscreenEventListeners();
+    
+    // 6. Mulai game jika belum berjalan
+    if (!gameState.running) {
+        startGame();
+    }
+    
+    console.log("✅ Fullscreen game mode started!");
+}
+
+function exitFullscreenGameMode() {
+    console.log("🚪 Exiting fullscreen game mode...");
+    
+    const fullscreenMode = document.getElementById('fullscreenGameMode');
+    if (fullscreenMode) {
+        fullscreenMode.classList.remove('active');
+        fullscreenMode.classList.remove('force-landscape');
+        isFullscreenGameMode = false;
+        
+        // Kembalikan ke menu utama
+        returnToMainMenu();
+    }
+}
+
+function updateFullscreenUI() {
+    // Update stats di header fullscreen
+    updateFullscreenStats();
+    
+    // Update tombol-tombol kontrol
+    updateFullscreenControls();
+}
+
+function updateFullscreenStats() {
+    const stats = {
+        lives: document.getElementById('fsLives'),
+        score: document.getElementById('fsScore'),
+        level: document.getElementById('fsLevel'),
+        timer: document.getElementById('fsTimer'),
+        booster: document.getElementById('fsBooster')
+    };
+    
+    if (stats.lives) {
+        stats.lives.innerHTML = `<i class="fas fa-heart"></i> ${gameState.lives}`;
+    }
+    
+    if (stats.score) {
+        stats.score.innerHTML = `<i class="fas fa-star"></i> ${gameState.score}`;
+    }
+    
+    if (stats.level) {
+        stats.level.innerHTML = `<i class="fas fa-flag"></i> Level ${gameState.currentLevel}`;
+    }
+    
+    if (stats.timer) {
+        stats.timer.innerHTML = `<i class="fas fa-clock"></i> ${Math.floor(gameState.timeLeft)}s`;
+    }
+    
+    if (stats.booster && player) {
+        stats.booster.innerHTML = `<i class="fas fa-rocket"></i> ${player.jumpBoosterChargesThisLife}`;
+    }
+}
+
+function updateFullscreenControls() {
+    // Update state tombol di fullscreen
+    const pauseBtn = document.getElementById('fsPause');
+    if (pauseBtn) {
+        if (gameState.paused) {
+            pauseBtn.innerHTML = '<i class="fas fa-play"></i> Lanjut';
+        } else {
+            pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Jeda';
+        }
+    }
+    
+    // Update sound button
+    const soundBtn = document.querySelector('#fullscreenControls .btn:nth-child(3)');
+    if (soundBtn) {
+        const audio = document.getElementById('backgroundMusic');
+        if (audio && audio.paused) {
+            soundBtn.innerHTML = '<i class="fas fa-volume-mute"></i> Suara';
+        } else {
+            soundBtn.innerHTML = '<i class="fas fa-volume-up"></i> Suara';
+        }
+    }
+}
+
+function setupFullscreenEventListeners() {
+    // Tombol keluar
+    const exitBtn = document.getElementById('fsExitBtn');
+    if (exitBtn) {
+        exitBtn.addEventListener('click', exitFullscreenGameMode);
+    }
+    
+    // Tombol pause
+    const pauseBtn = document.getElementById('fsPause');
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', function() {
+            togglePause();
+            updateFullscreenControls();
+        });
+    }
+    
+    // Tombol reset
+    const resetBtn = document.getElementById('fsReset');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', restartGame);
+    }
+    
+    // Tombol sound
+    const soundBtn = document.querySelector('#fullscreenControls .btn:nth-child(3)');
+    if (soundBtn) {
+        soundBtn.addEventListener('click', function() {
+            const audio = document.getElementById('backgroundMusic');
+            if (audio) {
+                if (audio.paused) {
+                    audio.play();
+                    this.innerHTML = '<i class="fas fa-volume-up"></i> Suara';
+                } else {
+                    audio.pause();
+                    this.innerHTML = '<i class="fas fa-volume-mute"></i> Suara';
+                }
+            }
+        });
+    }
+    
+    // Tombol booster
+    const boosterBtn = document.getElementById('fsBoosterBtn');
+    if (boosterBtn) {
+        boosterBtn.addEventListener('click', function() {
+            if (player && player.useJumpBooster) {
+                player.useJumpBooster();
+                updateFullscreenStats();
+            }
+        });
+    }
+    
+    // Tombol attack
+    const attackBtn = document.getElementById('fsAttack');
+    if (attackBtn) {
+        attackBtn.addEventListener('click', function() {
+            if (player.hasBoomerang) {
+                throwBoomerang();
+            } else {
+                performMeleeAttack();
+            }
+        });
+    }
+}
+
+// Panggil update stats secara berkala
+setInterval(function() {
+    if (isFullscreenGameMode) {
+        updateFullscreenStats();
+    }
+}, 1000);
     // ========== DEBUG VARIABLES ==========
     let showDebugInfo = false;
     

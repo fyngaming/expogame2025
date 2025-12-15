@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Tambahkan ini di dalam <head>, setelah link CSS yang lain -->
     <style>
         /* Animasi untuk auto-progress notification */
         @keyframes slideInDown {
@@ -32,14 +31,7 @@
             }
         }
         
-        /* Hide mobile controls on desktop by default */
-        @media (min-width: 769px) {
-            .mobile-controls:not(.fullscreen-visible) {
-                display: none !important;
-            }
-        }
-        
-        /* Fullscreen styles untuk container */
+        /* Fullscreen styles */
         :fullscreen #gameContainer,
         :-webkit-full-screen #gameContainer,
         :-moz-full-screen #gameContainer {
@@ -49,182 +41,72 @@
             max-height: 100% !important;
             border: none !important;
             border-radius: 0 !important;
+            overflow: hidden !important;
         }
         
-        /* ====== STYLES UNTUK LEVEL COMPLETE POPUP BARU ====== */
-        .level-complete-popup-v2 {
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) scale(0.9) !important;
-            z-index: 10001 !important;
-            background: linear-gradient(135deg, #1a472a, #2a623d) !important;
-            padding: 40px !important;
-            border-radius: 25px !important;
-            border: 5px solid #4CAF50 !important;
-            box-shadow: 0 0 50px rgba(76, 175, 80, 0.7) !important;
-            min-width: 500px !important;
-            max-width: 600px !important;
-            display: none !important;
-            opacity: 0;
-            transition: all 0.3s ease;
-            text-align: center;
+        /* Styles untuk fullscreen game mode */
+        .fullscreen-game-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10000;
+            background: #1e3a2a;
+            display: none;
         }
         
-        .level-complete-popup-v2.show {
-            display: block !important;
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1) !important;
-            animation: popupShowV2 0.5s ease-out !important;
-        }
-        
-        @keyframes popupShowV2 {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -50%) scale(0.8);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1);
-            }
-        }
-        
-        .level-complete-popup-v2 h2 {
-            color: #4CAF50;
-            margin-bottom: 25px;
-            font-size: 2.8rem;
+        .fullscreen-game-mode.active {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
+            flex-direction: column;
         }
         
-        .level-complete-popup-v2 .stats-container {
-            background: rgba(30, 58, 42, 0.9);
-            padding: 25px;
-            border-radius: 15px;
-            margin: 25px 0;
-            border: 2px solid #4CAF50;
-        }
-        
-        .level-complete-popup-v2 .stats-container div {
+        .fullscreen-header {
+            background: rgba(30, 58, 42, 0.95);
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
-            margin: 15px 0;
-            color: #a5d6a7;
-            font-size: 1.2rem;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(76, 175, 80, 0.3);
-        }
-        
-        .level-complete-popup-v2 .stats-container div:last-child {
-            border-bottom: none;
-            border-top: 2px solid #4CAF50;
-            margin-top: 20px;
-            padding-top: 20px;
-            font-weight: bold;
-        }
-        
-        .level-complete-popup-v2 .stats-container span {
-            color: white;
-            font-weight: bold;
-            font-size: 1.4rem;
-        }
-        
-        .level-complete-popup-v2 .booster-info {
-            background: rgba(0, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            border: 2px solid #00FFFF;
-        }
-        
-        .popup-buttons-v2 {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .popup-btn-v2 {
-            padding: 18px 35px;
-            border: none;
-            border-radius: 50px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 1.3rem;
-            min-width: 220px;
-            display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            border-bottom: 3px solid #4CAF50;
         }
         
-        .popup-btn-v2.continue {
-            background: linear-gradient(135deg, #4CAF50, #2E7D32);
-            color: white;
-            border: 2px solid #81C784;
+        .fullscreen-game-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
         }
         
-        .popup-btn-v2.retry {
-            background: linear-gradient(135deg, #FF9800, #F57C00);
-            color: white;
-            border: 2px solid #FFB74D;
+        .fullscreen-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(30, 58, 42, 0.95);
+            padding: 15px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 1000;
+            border-top: 3px solid #4CAF50;
         }
         
-        .popup-btn-v2.menu {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-            color: white;
-            border: 2px solid #64B5F6;
+        .fullscreen-controls .btn {
+            min-width: 120px;
+            padding: 12px 20px;
+            margin: 0 5px;
         }
         
-        .popup-btn-v2:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-        }
-        
-        .popup-btn-v2:active {
-            transform: translateY(2px);
-        }
-        
-        /* Responsive untuk popup baru */
-        @media (max-width: 768px) {
-            .level-complete-popup-v2 {
-                min-width: 320px !important;
-                max-width: 90% !important;
-                padding: 30px !important;
-                margin: 0 15px !important;
+        /* Landscape force untuk mobile */
+        @media screen and (orientation: portrait) {
+            .fullscreen-game-mode.force-landscape {
+                transform: rotate(90deg);
+                transform-origin: center;
+                width: 100vh;
+                height: 100vw;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(90deg);
             }
-            
-            .level-complete-popup-v2 h2 {
-                font-size: 2rem !important;
-            }
-            
-            .popup-buttons-v2 {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .popup-btn-v2 {
-                width: 100% !important;
-                min-width: auto !important;
-                padding: 15px 25px !important;
-                font-size: 1.1rem !important;
-            }
-        }
-        
-        /* Animasi untuk button lanjut */
-        @keyframes pulseContinue {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
-            50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
-        }
-        
-        .popup-btn-v2.continue.pulse {
-            animation: pulseContinue 2s infinite;
         }
     </style>
 </head>
@@ -236,13 +118,43 @@
         Browser Anda tidak mendukung elemen audio.
     </audio>
 
+    <!-- ELEMEN FULLSCREEN GAME MODE -->
+    <div class="fullscreen-game-mode" id="fullscreenGameMode">
+        <div class="fullscreen-header">
+            <div class="fullscreen-stats">
+                <span id="fsLives"><i class="fas fa-heart"></i> 5</span>
+                <span id="fsScore"><i class="fas fa-star"></i> 0</span>
+                <span id="fsLevel"><i class="fas fa-flag"></i> Level 1</span>
+                <span id="fsTimer"><i class="fas fa-clock"></i> 180s</span>
+                <span id="fsBooster"><i class="fas fa-rocket"></i> 3</span>
+            </div>
+            <button id="fsExitBtn" class="btn" style="background: #f44336;">
+                <i class="fas fa-times"></i> Keluar
+            </button>
+        </div>
+        
+        <div class="fullscreen-game-area">
+            <canvas id="gameCanvas" width="1000" height="600"></canvas>
+        </div>
+        
+        <div class="fullscreen-controls" id="fullscreenControls">
+            <!-- Tombol-tombol akan diisi oleh JavaScript -->
+        </div>
+        
+        <!-- Mobile Controls di Fullscreen -->
+        <div class="mobile-controls fullscreen-visible" id="fullscreenMobileControls">
+            <!-- Mobile controls akan ditambahkan di sini -->
+        </div>
+    </div>
+
+    <!-- MAIN GAME INTERFACE -->
     <div class="container">
         <header>
             <h1><i class="fas fa-dragon"></i> Koko Adventure v4.0</h1>
             <p class="subtitle">10 Level Petualangan di Hutan Ajaib!</p>
         </header>
 
-        <div class="game-container">
+        <div class="game-container" id="gameContainer">
             <div class="game-header">
                 <div class="stats">
                     <div class="stat">
@@ -274,10 +186,11 @@
                 </div>
             </div>
 
-            <canvas id="gameCanvas" width="1000" height="600"></canvas>
+            <canvas id="gameCanvasMain" width="1000" height="600" style="display: block;"></canvas>
             <div class="game-controls">
+                <!-- TOMBOL MULAI GAME YANG BARU -->
                 <button id="startBtn" class="btn btn-start">
-                    <i class="fas fa-play"></i> Mulai Game (Fullscreen)
+                    <i class="fas fa-play"></i> Mulai Game (Fullscreen Landscape)
                 </button>
                 <button id="pauseBtn" class="btn btn-pause">
                     <i class="fas fa-pause"></i> Jeda
@@ -292,7 +205,7 @@
                 <button id="menuBtn" class="btn btn-menu">
                     <i class="fas fa-home"></i> Menu Utama
                 </button>
-                <!-- TOMBOL LEVEL BERIKUTNYA -->
+                
                 <button id="nextLevelBtn" class="btn btn-next" style="display: none;">
                     <i class="fas fa-forward"></i> Level Berikutnya
                 </button>
@@ -307,62 +220,9 @@
             </div>
 
             <!-- ========== MOBILE CONTROLS ========== -->
-            <div class="mobile-controls">
-                <!-- Control Mode Selector -->
-                <div class="control-mode">
-                    <button id="modeAnalog" class="control-mode-btn active">Analog Stick</button>
-                    <button id="modeDPad" class="control-mode-btn">D-Pad</button>
-                </div>
-                
-                <!-- Analog Stick Version (Default) -->
-                <div id="analogControls" class="analog-container">
-                    <div class="analog-base"></div>
-                    <div class="analog-knob" id="analogKnob"></div>
-                </div>
-                
-                <!-- D-Pad Version (Hidden by default) -->
-                <div id="dpadControls" class="d-pad-v2" style="display: none;">
-                    <div class="d-pad-row">
-                        <button id="upBtnV2" class="dir-btn-v2"><i class="fas fa-arrow-up"></i></button>
-                    </div>
-                    <div class="d-pad-row">
-                        <button id="leftBtnV2" class="dir-btn-v2"><i class="fas fa-arrow-left"></i></button>
-                        <div style="width: 70px;"></div>
-                        <button id="rightBtnV2" class="dir-btn-v2"><i class="fas fa-arrow-right"></i></button>
-                    </div>
-                    <div class="d-pad-row">
-                        <button id="downBtnV2" class="dir-btn-v2"><i class="fas fa-arrow-down"></i></button>
-                    </div>
-                </div>
-                
-                <button id="mobileFullscreenBtn" class="mobile-fullscreen-btn" title="Toggle Fullscreen">
-                    <i class="fas fa-expand"></i>
-                </button>
-
-                <!-- Action Buttons Grid -->
-                <div class="action-grid">
-                    <button id="jumpBtn" class="action-btn-v2 jump">
-                        <i class="fas fa-arrow-up"></i>
-                        <span style="font-size: 0.7rem; position: absolute; bottom: 5px;">Lompat</span>
-                    </button>
-                    <button id="attackBtnV2" class="action-btn-v2 attack">
-                        <i class="fas fa-bolt"></i>
-                        <span style="font-size: 0.7rem; position: absolute; bottom: 5px;">Serang</span>
-                    </button>
-
-                    <!-- TOMBOL JUMP BOOSTER -->
-                    <button id="jumpBoosterBtn" class="action-btn-v2 booster" data-count="3">
-                        <i class="fas fa-rocket"></i>
-                        <span class="booster-count">3</span>
-                        <span style="font-size: 0.7rem; position: absolute; bottom: 5px;">Super Jump</span>
-                    </button> 
-                    <button id="boomerangBtnV2" class="action-btn-v2 boomerang">
-                        <i class="fas fa-space-shuttle"></i>
-                        <span style="font-size: 0.7rem; position: absolute; bottom: 5px;">Boomerang</span>
-                    </button>
-                </div>
+            <div class="mobile-controls" id="mobileControls">
+                <!-- Mobile controls content -->
             </div>
-            <!-- ========== END MOBILE CONTROLS ========== -->
         </div>
 
         <!-- JUMP BOOSTER COUNTER DISPLAY -->
@@ -381,56 +241,7 @@
         <!-- ========== INSTRUCTIONS SECTION ========== -->
         <div class="instructions">
             <h2><i class="fas fa-info-circle"></i> Panduan Game v4.0</h2>
-            <div class="instructions-content">
-                <div class="instruction">
-                    <h3><i class="fas fa-chart-line"></i> 10 Level Petualangan</h3>
-                    <p><strong>Level 1-3:</strong> Hutan Dasar<br>
-                       <strong>Level 4-6:</strong> Hutan Berbahaya<br>
-                       <strong>Level 7-9:</strong> Hutan Legendaris<br>
-                       <strong>Level 10:</strong> Pertempuran Akhir</p>
-                </div>
-                <div class="instruction">
-                    <h3><i class="fas fa-gamepad"></i> Kontrol & Item</h3>
-                    <p>• ←→ : Gerakkan karakter<br>
-                       • ↑/Spasi/X : Lompat<br>
-                       • Z : Serang / Lempar Boomerang<br>
-                       • Kumpulkan item untuk power-up<br>
-                       • Hindari platform berbahaya</p>
-                </div>
-                <div class="instruction">
-                    <h3><i class="fas fa-trophy"></i> Sistem Progresi</h3>
-                    <p>• Selesaikan level untuk unlock level berikutnya<br>
-                       • Kalah = ulang level yang sama<br>
-                       • Bonus skor dari sisa waktu & nyawa<br>
-                       • Kalahkan bos untuk menang!</p>
-                </div>
-            </div>
-            
-            <div class="enemy-guide">
-                <h3><i class="fas fa-robot"></i> Jenis Musuh</h3>
-                <div class="enemy-list">
-                    <div class="enemy-item">
-                        <div class="enemy-icon robot"></div>
-                        <span>Robot</span>
-                    </div>
-                    <div class="enemy-item">
-                        <div class="enemy-icon snake"></div>
-                        <span>Ular</span>
-                    </div>
-                    <div class="enemy-item">
-                        <div class="enemy-icon spider"></div>
-                        <span>Laba-laba</span>
-                    </div>
-                    <div class="enemy-item">
-                        <div class="enemy-icon dragon"></div>
-                        <span>Naga</span>
-                    </div>
-                    <div class="enemy-item">
-                        <div class="enemy-icon wizard"></div>
-                        <span>Penyihir</span>
-                    </div>
-                </div>
-            </div>
+            <!-- Instructions content -->
         </div>
 
         <footer>
@@ -442,7 +253,7 @@
     <!-- Overlay untuk popup -->
     <div class="overlay"></div>
     
-    <!-- Popup baru untuk Level Complete (TANPA COUNTDOWN) -->
+    <!-- Popup baru untuk Level Complete -->
     <div class="level-complete-popup-v2" id="levelCompletePopupV2">
         <!-- Konten akan diisi oleh JavaScript -->
     </div>
@@ -450,1210 +261,241 @@
     <script src="game.js"></script>
     <script>
         // =============================================
-        // SISTEM SUARA - BACKGROUND MUSIC
+        // SISTEM FULLSCREEN LANDSCAPE GAME MODE
         // =============================================
         
-        // Inisialisasi variabel suara
-        let isSoundEnabled = false;
-        const backgroundMusic = document.getElementById('backgroundMusic');
-        const soundBtn = document.getElementById('soundBtn');
+        let isFullscreenMode = false;
         
-        // Atur volume default (40%)
-        backgroundMusic.volume = 0.4;
-        
-        // Fungsi toggle suara
-        function toggleSound() {
-            isSoundEnabled = !isSoundEnabled;
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("🎮 Initializing fullscreen game mode...");
             
-            if (isSoundEnabled) {
-                // Nyalakan musik background
-                backgroundMusic.play().catch(error => {
-                    console.log("Autoplay diblokir, klik tombol suara lagi");
-                    isSoundEnabled = false;
+            // Setup tombol mulai game
+            const startBtn = document.getElementById('startBtn');
+            if (startBtn) {
+                startBtn.addEventListener('click', function() {
+                    console.log("🚀 Tombol 'Mulai Game' diklik - Memulai fullscreen landscape mode");
+                    startFullscreenGameMode();
                 });
-                
-                // Update tampilan tombol
-                soundBtn.innerHTML = '<i class="fas fa-volume-up"></i> Suara ON';
-                console.log("🔊 Musik background diaktifkan");
-            } else {
-                // Matikan musik
-                backgroundMusic.pause();
-                
-                // Update tampilan tombol
-                soundBtn.innerHTML = '<i class="fas fa-volume-mute"></i> Suara OFF';
-                console.log("🔇 Musik background dimatikan");
             }
-        }
-        
-        // Event listener untuk tombol suara
-        soundBtn.addEventListener('click', function() {
-            console.log("🎵 Tombol suara diklik");
-            toggleSound();
+            
+            // Setup tombol keluar fullscreen
+            const fsExitBtn = document.getElementById('fsExitBtn');
+            if (fsExitBtn) {
+                fsExitBtn.addEventListener('click', function() {
+                    console.log("🚪 Keluar dari fullscreen mode");
+                    exitFullscreenGameMode();
+                });
+            }
+            
+            // Setup tombol suara
+            setupAudioSystem();
+            
+            console.log("✅ Fullscreen game mode system ready!");
         });
         
-        // Coba mulai musik secara otomatis jika user telah berinteraksi
-        let audioInitialized = false;
-        function initAudioOnInteraction() {
-            if (!audioInitialized) {
-                // Coba mulai musik dengan volume rendah
-                backgroundMusic.volume = 0.1;
-                backgroundMusic.play().then(() => {
-                    console.log("🎵 Musik dimulai otomatis");
-                    isSoundEnabled = true;
-                    soundBtn.innerHTML = '<i class="fas fa-volume-up"></i> Suara ON';
-                    // Kembalikan volume normal setelah dimulai
+        function startFullscreenGameMode() {
+            console.log("🎮 Starting fullscreen game mode...");
+            
+            // 1. Tampilkan fullscreen game mode
+            const fullscreenMode = document.getElementById('fullscreenGameMode');
+            if (fullscreenMode) {
+                fullscreenMode.classList.add('active');
+                isFullscreenMode = true;
+                
+                // 2. Force landscape di mobile
+                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    console.log("📱 Mobile device detected - forcing landscape");
+                    fullscreenMode.classList.add('force-landscape');
+                }
+                
+                // 3. Setup kontrol di fullscreen
+                setupFullscreenControls();
+                
+                // 4. Setup mobile controls di fullscreen
+                setupFullscreenMobileControls();
+                
+                // 5. Mulai game jika ada fungsi startGame
+                if (window.startGame) {
                     setTimeout(() => {
-                        backgroundMusic.volume = 0.4;
-                    }, 1000);
-                }).catch(error => {
-                    console.log("❌ Autoplay diblokir, klik tombol suara untuk memulai");
-                });
-                
-                audioInitialized = true;
-                // Hapus event listeners setelah dicoba
-                document.removeEventListener('click', initAudioOnInteraction);
-                document.removeEventListener('keydown', initAudioOnInteraction);
-                document.removeEventListener('touchstart', initAudioOnInteraction);
-            }
-        }
-        
-        // Tambah event listeners untuk interaksi user
-        document.addEventListener('click', initAudioOnInteraction);
-        document.addEventListener('keydown', initAudioOnInteraction);
-        document.addEventListener('touchstart', initAudioOnInteraction);
-        
-        // Handle ketika musik selesai (loop otomatis)
-        backgroundMusic.addEventListener('ended', function() {
-            console.log("🔄 Musik selesai, memulai ulang...");
-            backgroundMusic.currentTime = 0;
-            if (isSoundEnabled) {
-                backgroundMusic.play();
-            }
-        });
-        
-        // Handle error audio - gunakan musik online jika file lokal tidak ada
-        backgroundMusic.addEventListener('error', function(e) {
-            console.error("❌ Error audio:", e);
-            
-            // Coba gunakan musik online alternatif
-            const onlineMusic = 'https://assets.mixkit.co/music/preview/mixkit-game-show-suspense-waiting-667.mp3';
-            backgroundMusic.src = onlineMusic;
-            backgroundMusic.load();
-            
-            console.log("🔄 Mencoba musik online alternatif...");
-        });
-        
-        // =============================================
-        // FULLSCREEN FUNCTIONALITY
-        // =============================================
-        
-        document.getElementById('fullscreenBtn').addEventListener('click', function() {
-            const canvas = document.getElementById('gameCanvas');
-            if (!document.fullscreenElement) {
-                if (canvas.requestFullscreen) {
-                    canvas.requestFullscreen();
-                } else if (canvas.webkitRequestFullscreen) {
-                    canvas.webkitRequestFullscreen();
-                } else if (canvas.msRequestFullscreen) {
-                    canvas.msRequestFullscreen();
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
-                }
-            }
-        });
-        
-        // =============================================
-        // MOBILE CONTROLS POSITIONING IN FULLSCREEN
-        // =============================================
-        
-        function positionMobileControlsInFullscreen() {
-            const mobileControls = document.querySelector('.mobile-controls');
-            const canvas = document.getElementById('gameCanvas');
-            
-            if (!mobileControls || !canvas) return;
-            
-            if (document.fullscreenElement || 
-                document.webkitFullscreenElement || 
-                document.msFullscreenElement) {
-                // Saat fullscreen, posisikan mobile controls di bawah canvas
-                mobileControls.style.position = 'fixed';
-                mobileControls.style.bottom = '20px';
-                mobileControls.style.left = '50%';
-                mobileControls.style.transform = 'translateX(-50%)';
-                mobileControls.style.zIndex = '1000';
-                mobileControls.style.background = 'rgba(30, 58, 42, 0.95)';
-                mobileControls.style.border = '3px solid #4CAF50';
-                mobileControls.style.boxShadow = '0 0 20px rgba(76, 175, 80, 0.5)';
-                mobileControls.classList.add('fullscreen-position');
-            } else {
-                // Saat keluar fullscreen, kembalikan ke posisi semula
-                mobileControls.style.position = '';
-                mobileControls.style.bottom = '';
-                mobileControls.style.left = '';
-                mobileControls.style.transform = '';
-                mobileControls.style.zIndex = '';
-                mobileControls.style.background = '';
-                mobileControls.style.border = '';
-                mobileControls.style.boxShadow = '';
-                mobileControls.classList.remove('fullscreen-position');
-            }
-        }
-        
-        function updateFullscreenButton() {
-            const btn = document.getElementById('fullscreenBtn');
-            if (document.fullscreenElement || 
-                document.webkitFullscreenElement || 
-                document.msFullscreenElement) {
-                btn.innerHTML = '<i class="fas fa-compress"></i> Keluar Fullscreen';
-                positionMobileControlsInFullscreen();
-            } else {
-                btn.innerHTML = '<i class="fas fa-expand"></i> Layar Penuh';
-                positionMobileControlsInFullscreen();
-            }
-        }
-        
-        // Tambahkan event listener untuk fullscreen change
-        document.addEventListener('fullscreenchange', function() {
-            positionMobileControlsInFullscreen();
-            updateFullscreenButton();
-        });
-        
-        document.addEventListener('webkitfullscreenchange', function() {
-            positionMobileControlsInFullscreen();
-            updateFullscreenButton();
-        });
-        
-        document.addEventListener('msfullscreenchange', function() {
-            positionMobileControlsInFullscreen();
-            updateFullscreenButton();
-        });
-        
-        // Panggil fungsi saat halaman dimuat
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(positionMobileControlsInFullscreen, 100);
-        });
-        
-        // =============================================
-        // MOBILE CONTROLS INITIALIZATION
-        // =============================================
-        
-        // Setup Mobile Controls
-        function setupMobileControls() {
-            console.log("📱 Setting up mobile controls...");
-            
-            // Control Mode Switching
-            const modeAnalogBtn = document.getElementById('modeAnalog');
-            const modeDPadBtn = document.getElementById('modeDPad');
-            const analogControls = document.getElementById('analogControls');
-            const dpadControls = document.getElementById('dpadControls');
-            
-            if (modeAnalogBtn && modeDPadBtn) {
-                modeAnalogBtn.addEventListener('click', function() {
-                    modeAnalogBtn.classList.add('active');
-                    modeDPadBtn.classList.remove('active');
-                    analogControls.style.display = 'flex';
-                    dpadControls.style.display = 'none';
-                });
-                
-                modeDPadBtn.addEventListener('click', function() {
-                    modeDPadBtn.classList.add('active');
-                    modeAnalogBtn.classList.remove('active');
-                    analogControls.style.display = 'none';
-                    dpadControls.style.display = 'flex';
-                });
-            }
-            
-            // Analog Stick Implementation
-            const analogKnob = document.getElementById('analogKnob');
-            if (analogKnob) {
-                let isDragging = false;
-                let startX, startY;
-                let currentX = 0, currentY = 0;
-                const maxDistance = 40;
-                
-                analogKnob.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    isDragging = true;
-                    const touch = e.touches[0];
-                    startX = touch.clientX;
-                    startY = touch.clientY;
-                });
-                
-                analogKnob.addEventListener('mousedown', function(e) {
-                    e.preventDefault();
-                    isDragging = true;
-                    startX = e.clientX;
-                    startY = e.clientY;
-                });
-                
-                document.addEventListener('touchmove', function(e) {
-                    if (!isDragging) return;
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    updateAnalogPosition(touch.clientX, touch.clientY, startX, startY);
-                });
-                
-                document.addEventListener('mousemove', function(e) {
-                    if (!isDragging) return;
-                    e.preventDefault();
-                    updateAnalogPosition(e.clientX, e.clientY, startX, startY);
-                });
-                
-                function updateAnalogPosition(clientX, clientY, startX, startY) {
-                    let deltaX = clientX - startX;
-                    let deltaY = clientY - startY;
-                    
-                    // Limit to max distance
-                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                    if (distance > maxDistance) {
-                        deltaX = (deltaX / distance) * maxDistance;
-                        deltaY = (deltaY / distance) * maxDistance;
-                    }
-                    
-                    // Update knob position
-                    analogKnob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                    currentX = deltaX;
-                    currentY = deltaY;
-                    
-                    // Update movement keys based on position
-                    updateMovementFromAnalog(deltaX, deltaY, maxDistance);
-                }
-                
-                document.addEventListener('touchend', function() {
-                    if (isDragging) {
-                        isDragging = false;
-                        resetAnalog();
-                    }
-                });
-                
-                document.addEventListener('mouseup', function() {
-                    if (isDragging) {
-                        isDragging = false;
-                        resetAnalog();
-                    }
-                });
-                
-                function resetAnalog() {
-                    analogKnob.style.transform = 'translate(0px, 0px)';
-                    currentX = 0;
-                    currentY = 0;
-                    // Clear movement keys
-                    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowLeft' }));
-                    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight' }));
-                    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp' }));
-                    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowDown' }));
-                }
-                
-                function updateMovementFromAnalog(deltaX, deltaY, maxDistance) {
-                    const threshold = 0.3;
-                    
-                    // Horizontal movement
-                    if (deltaX < -maxDistance * threshold) {
-                        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
-                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight' }));
-                    } else if (deltaX > maxDistance * threshold) {
-                        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
-                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowLeft' }));
-                    } else {
-                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowLeft' }));
-                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight' }));
-                    }
-                    
-                    // Vertical movement (jump/crouch)
-                    if (deltaY < -maxDistance * threshold) {
-                        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
-                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowDown' }));
-                    } else if (deltaY > maxDistance * threshold) {
-                        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
-                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp' }));
-                    } else {
-                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp' }));
-                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowDown' }));
-                    }
-                }
-            }
-            
-            // D-Pad Buttons
-            setupDPadButton('leftBtnV2', 'ArrowLeft');
-            setupDPadButton('rightBtnV2', 'ArrowRight');
-            setupDPadButton('upBtnV2', 'ArrowUp');
-            setupDPadButton('downBtnV2', 'ArrowDown');
-            
-            function setupDPadButton(buttonId, key) {
-                const button = document.getElementById(buttonId);
-                if (button) {
-                    button.addEventListener('touchstart', function(e) {
-                        e.preventDefault();
-                        window.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
-                        this.classList.add('active');
-                    });
-                    
-                    button.addEventListener('touchend', function(e) {
-                        e.preventDefault();
-                        window.dispatchEvent(new KeyboardEvent('keyup', { key: key }));
-                        this.classList.remove('active');
-                    });
-                    
-                    button.addEventListener('mousedown', function(e) {
-                        e.preventDefault();
-                        window.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
-                        this.classList.add('active');
-                    });
-                    
-                    button.addEventListener('mouseup', function(e) {
-                        e.preventDefault();
-                        window.dispatchEvent(new KeyboardEvent('keyup', { key: key }));
-                        this.classList.remove('active');
-                    });
-                }
-            }
-            
-            // Action Buttons
-            setupActionButton('jumpBtn', ['ArrowUp', ' ', 'x', 'X']);
-            setupActionButton('attackBtnV2', ['z', 'Z']);
-            setupActionButton('boomerangBtnV2', ['z', 'Z']); // Same as attack for boomerang
-            
-            // Jump Booster Button
-            const jumpBoosterBtn = document.getElementById('jumpBoosterBtn');
-            if (jumpBoosterBtn) {
-                jumpBoosterBtn.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'b' }));
-                    this.classList.add('active');
-                });
-                
-                jumpBoosterBtn.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'b' }));
-                    this.classList.remove('active');
-                });
-            }
-            
-            function setupActionButton(buttonId, keys) {
-                const button = document.getElementById(buttonId);
-                if (button) {
-                    button.addEventListener('touchstart', function(e) {
-                        e.preventDefault();
-                        keys.forEach(key => {
-                            window.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
-                        });
-                        this.classList.add('active');
-                    });
-                    
-                    button.addEventListener('touchend', function(e) {
-                        e.preventDefault();
-                        keys.forEach(key => {
-                            window.dispatchEvent(new KeyboardEvent('keyup', { key: key }));
-                        });
-                        this.classList.remove('active');
-                    });
-                    
-                    button.addEventListener('mousedown', function(e) {
-                        e.preventDefault();
-                        keys.forEach(key => {
-                            window.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
-                        });
-                        this.classList.add('active');
-                    });
-                    
-                    button.addEventListener('mouseup', function(e) {
-                        e.preventDefault();
-                        keys.forEach(key => {
-                            window.dispatchEvent(new KeyboardEvent('keyup', { key: key }));
-                        });
-                        this.classList.remove('active');
-                    });
-                }
-            }
-            
-            console.log("✅ Mobile controls setup complete!");
-        }
-
-        // =============================================
-        // FULLSCREEN FUNCTIONALITY WITH MOBILE CONTROLS
-        // =============================================
-
-        document.getElementById('fullscreenBtn').addEventListener('click', function() {
-            const canvas = document.getElementById('gameCanvas');
-            const mobileControls = document.querySelector('.mobile-controls');
-            
-            if (!document.fullscreenElement) {
-                if (canvas.requestFullscreen) {
-                    canvas.requestFullscreen();
-                } else if (canvas.webkitRequestFullscreen) {
-                    canvas.webkitRequestFullscreen();
-                } else if (canvas.msRequestFullscreen) {
-                    canvas.msRequestFullscreen();
-                }
-                
-                // Hide mobile controls on desktop by default
-                if (window.innerWidth >= 769) {
-                    mobileControls.style.display = 'none';
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
-                }
-            }
-        });
-
-        // Function to show/hide mobile controls based on screen size and fullscreen
-        function updateMobileControlsVisibility() {
-            const mobileControls = document.querySelector('.mobile-controls');
-            
-            if (!mobileControls) return;
-            
-            if (document.fullscreenElement || 
-                document.webkitFullscreenElement || 
-                document.msFullscreenElement) {
-                // In fullscreen, always show mobile controls
-                mobileControls.style.display = 'flex';
-                
-                // Reposition for fullscreen
-                mobileControls.style.position = 'fixed';
-                mobileControls.style.bottom = '20px';
-                mobileControls.style.left = '50%';
-                mobileControls.style.transform = 'translateX(-50%)';
-                mobileControls.style.zIndex = '1000';
-                mobileControls.style.background = 'rgba(30, 58, 42, 0.95)';
-                mobileControls.style.border = '3px solid #4CAF50';
-                mobileControls.style.boxShadow = '0 0 20px rgba(76, 175, 80, 0.5)';
-                mobileControls.style.width = '90%';
-                mobileControls.style.maxWidth = '800px';
-                mobileControls.style.padding = '15px';
-                mobileControls.style.borderRadius = '15px';
-            } else {
-                // Not in fullscreen, hide on desktop, show on mobile
-                if (window.innerWidth >= 769) {
-                    mobileControls.style.display = 'none';
-                } else {
-                    mobileControls.style.display = 'flex';
-                    mobileControls.style.position = '';
-                    mobileControls.style.bottom = '';
-                    mobileControls.style.left = '';
-                    mobileControls.style.transform = '';
-                    mobileControls.style.zIndex = '';
-                    mobileControls.style.background = '';
-                    mobileControls.style.border = '';
-                    mobileControls.style.boxShadow = '';
-                    mobileControls.style.width = '';
-                    mobileControls.style.padding = '';
-                }
-            }
-        }
-
-        // Update fullscreen button text and mobile controls
-        function updateFullscreenButton() {
-            const btn = document.getElementById('fullscreenBtn');
-            if (document.fullscreenElement || 
-                document.webkitFullscreenElement || 
-                document.msFullscreenElement) {
-                btn.innerHTML = '<i class="fas fa-compress"></i> Keluar Fullscreen';
-                updateMobileControlsVisibility();
-            } else {
-                btn.innerHTML = '<i class="fas fa-expand"></i> Layar Penuh';
-                updateMobileControlsVisibility();
-            }
-        }
-
-        // Event listeners for fullscreen changes
-        document.addEventListener('fullscreenchange', function() {
-            updateFullscreenButton();
-            updateMobileControlsVisibility();
-        });
-
-        document.addEventListener('webkitfullscreenchange', function() {
-            updateFullscreenButton();
-            updateMobileControlsVisibility();
-        });
-
-        document.addEventListener('msfullscreenchange', function() {
-            updateFullscreenButton();
-            updateMobileControlsVisibility();
-        });
-
-        // Also update on resize
-        window.addEventListener('resize', updateMobileControlsVisibility);
-
-        // Initial setup
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                updateMobileControlsVisibility();
-                updateFullscreenButton();
-            }, 100);
-        });
-
-        // =============================================
-        // AUTO LEVEL PROGRESSION SYSTEM
-        // =============================================
-
-        // Function to automatically progress to next level
-        function autoProgressToNextLevel() {
-            if (window.gameState && gameState.currentLevel < gameState.maxLevel) {
-                console.log(`🎯 Auto-progressing to level ${gameState.currentLevel + 1}`);
-                
-                // Keep current booster charges
-                const currentBoosterCharges = window.player ? player.jumpBoosterChargesThisLife : 3;
-                
-                // Setup next level
-                if (window.setupLevel) {
-                    setupLevel(gameState.currentLevel + 1);
-                    
-                    // Restore booster charges
-                    if (window.player) {
-                        player.jumpBoosterChargesThisLife = currentBoosterCharges;
-                        player.jumpBoosterCharges = currentBoosterCharges;
-                    }
-                    
-                    // Auto-start next level
-                    if (window.startGame) {
+                        console.log("🎮 Starting game in fullscreen mode");
                         startGame();
-                    }
-                    
-                    // Hide next level button since we're auto-progressing
-                    if (window.hideNextLevelButton) {
-                        hideNextLevelButton();
-                    }
-                    
-                    // Update UI
-                    if (window.updateGameStats) {
-                        updateGameStats();
-                    }
-                    
-                    console.log(`✅ Auto-progressed to Level ${gameState.currentLevel}!`);
-                    
-                    // Show notification
-                    setTimeout(() => {
-                        showAutoProgressNotification(`Level ${gameState.currentLevel} dimulai!`);
                     }, 500);
                 }
-            } else if (window.gameState && gameState.currentLevel >= gameState.maxLevel) {
-                console.log("🎉 Game completed! All levels finished.");
+            }
+        }
+        
+        function exitFullscreenGameMode() {
+            console.log("🚪 Exiting fullscreen game mode...");
+            
+            const fullscreenMode = document.getElementById('fullscreenGameMode');
+            if (fullscreenMode) {
+                fullscreenMode.classList.remove('active');
+                fullscreenMode.classList.remove('force-landscape');
+                isFullscreenMode = false;
                 
-                // Show completion message
-                setTimeout(() => {
-                    showAutoProgressNotification("🎮 SELESAI! Semua 10 level telah diselesaikan!");
-                }, 500);
+                // Kembali ke menu utama
+                if (window.returnToMainMenu) {
+                    returnToMainMenu();
+                }
             }
         }
-
-        // Function to show auto-progress notification
-        function showAutoProgressNotification(message) {
-            // Remove existing notification
-            const existingNotification = document.querySelector('.auto-progress-notification');
-            if (existingNotification) {
-                existingNotification.remove();
-            }
-            
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = 'auto-progress-notification';
-            notification.innerHTML = `
-                <i class="fas fa-forward"></i>
-                <span>${message}</span>
-            `;
-            
-            // Style the notification
-            notification.style.cssText = `
-                position: fixed;
-                top: 100px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: #4CAF50;
-                color: white;
-                padding: 15px 25px;
-                border-radius: 10px;
-                font-weight: bold;
-                z-index: 1000;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                animation: slideInDown 0.3s ease-out;
-                text-align: center;
-            `;
-            
-            document.body.appendChild(notification);
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-                notification.style.animation = 'slideOutUp 0.3s ease-in';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
-
-        // Add CSS animations for notifications
-        const notificationStyles = document.createElement('style');
-        notificationStyles.textContent = `
-            @keyframes slideInDown {
-                from {
-                    transform: translateX(-50%) translateY(-100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(-50%) translateY(0);
-                    opacity: 1;
-                }
-            }
-            
-            @keyframes slideOutUp {
-                from {
-                    transform: translateX(-50%) translateY(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(-50%) translateY(-100%);
-                    opacity: 0;
-                }
-            }
-            
-            @keyframes slideInRight {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-            
-            @keyframes slideOutRight {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-            }
-            
-            /* Hide mobile controls on desktop by default */
-            @media (min-width: 769px) {
-                .mobile-controls:not(.force-show) {
-                    display: none !important;
-                }
-            }
-        `;
-        document.head.appendChild(notificationStyles);
-
-        // =============================================
-        // INITIALIZATION
-        // =============================================
-
-        console.log("✅ Auto-level progression system loaded!");
-        console.log("🎮 Mobile controls will only show in fullscreen mode on desktop");
-        console.log("🚀 Game will auto-progress through all 10 levels");
         
-        // Initialize mobile controls when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(setupMobileControls, 1000);
-        });
-        
-        console.log("✅ Sistem suara siap digunakan!");
-        console.log("🎮 Tekan tombol 'Suara' untuk mengaktifkan musik background");
-        
-        // =============================================
-        // TOMBOL MENU UTAMA
-        // =============================================
-        document.getElementById('menuBtn').addEventListener('click', function() {
-            console.log("🏠 Tombol Menu Utama diklik");
-            // Event ini akan ditangani oleh game.js
-        });
-        
-        // =============================================
-        // FUNGSI UNTUK POPUP LEVEL COMPLETE BARU
-        // =============================================
-        
-        // Fungsi untuk menampilkan popup level complete dengan button lanjut
-        window.showLevelCompletePopupNew = function(timeBonus, livesBonus, levelBonus) {
-            const overlay = document.querySelector('.overlay');
-            const popup = document.getElementById('levelCompletePopupV2');
+        function setupFullscreenControls() {
+            console.log("🔧 Setting up fullscreen controls...");
             
-            if (!popup) {
-                console.error("❌ Popup level complete tidak ditemukan!");
-                return;
-            }
+            const fullscreenControls = document.getElementById('fullscreenControls');
+            if (!fullscreenControls) return;
             
-            // Isi konten popup
-            const currentLevel = window.gameState ? gameState.currentLevel : 1;
-            const nextLevel = currentLevel < 10 ? currentLevel + 1 : currentLevel;
-            const playerCharges = window.player ? player.jumpBoosterChargesThisLife : 3;
-            const totalScore = window.gameState ? gameState.score : 0;
+            // Tombol-tombol untuk fullscreen
+            const buttons = [
+                { id: 'fsPause', icon: 'fa-pause', text: 'Jeda', color: '#FF9800', action: 'togglePause' },
+                { id: 'fsReset', icon: 'fa-redo', text: 'Ulangi', color: '#f44336', action: 'restartGame' },
+                { id: 'fsSound', icon: 'fa-volume-up', text: 'Suara', color: '#2196F3', action: 'toggleSound' },
+                { id: 'fsBoosterBtn', icon: 'fa-rocket', text: 'Boost', color: '#FF5722', action: 'useJumpBooster' },
+                { id: 'fsAttack', icon: 'fa-bolt', text: 'Serang', color: '#4CAF50', action: 'performAttack' }
+            ];
             
-            popup.innerHTML = `
-                <h2><i class="fas fa-trophy"></i> LEVEL SELESAI!</h2>
-                <div class="stats-container">
-                    <div>Level ${currentLevel} Berhasil Diselesaikan!</div>
-                    <div>Bonus Waktu: <span>${timeBonus}</span></div>
-                    <div>Bonus Nyawa: <span>${livesBonus}</span></div>
-                    <div>Bonus Level: <span>${levelBonus}</span></div>
-                    <div>Total Skor: <span>${totalScore}</span></div>
-                </div>
-                ${currentLevel < 10 ? `
-                    <div style="margin: 20px 0; font-size: 1.3rem; color: #00FFFF;">
-                        <i class="fas fa-forward"></i> Lanjut ke Level ${nextLevel}
-                    </div>
-                ` : `
-                    <div style="margin: 20px 0; font-size: 1.3rem; color: #FFD700;">
-                        <i class="fas fa-crown"></i> SELAMAT! Semua Level Telah Diselesaikan!
-                    </div>
-                `}
-                <div class="booster-info">
-                    <i class="fas fa-rocket"></i> 
-                    Jump Booster: <span>${playerCharges} charges</span> tersedia untuk level berikutnya
-                </div>
-                <div class="popup-buttons-v2">
-                    ${currentLevel < 10 ? `
-                        <button class="popup-btn-v2 continue pulse">
-                            <i class="fas fa-forward"></i> Lanjutkan ke Level ${nextLevel}
-                        </button>
-                    ` : ''}
-                    <button class="popup-btn-v2 retry">
-                        <i class="fas fa-redo"></i> Ulangi Level
-                    </button>
-                    <button class="popup-btn-v2 menu">
-                        <i class="fas fa-home"></i> Menu Utama
-                    </button>
-                </div>
-            `;
+            fullscreenControls.innerHTML = '';
             
-            // Tampilkan overlay dan popup
-            overlay.classList.add('show');
-            popup.classList.add('show');
-            
-            // Event listeners untuk tombol
-            const continueBtn = popup.querySelector('.popup-btn-v2.continue');
-            const retryBtn = popup.querySelector('.popup-btn-v2.retry');
-            const menuBtn = popup.querySelector('.popup-btn-v2.menu');
-            
-            if (continueBtn) {
-                continueBtn.addEventListener('click', function() {
-                    console.log(`➡️ Tombol "Lanjutkan ke Level ${nextLevel}" diklik`);
-                    
-                    // Tutup popup
-                    overlay.classList.remove('show');
-                    popup.classList.remove('show');
-                    
-                    // Pindah ke level berikutnya
-                    if (window.gameState && gameState.currentLevel < gameState.maxLevel) {
-                        const currentBoosterCharges = window.player ? player.jumpBoosterChargesThisLife : 3;
-                        
-                        if (window.setupLevel) {
-                            setupLevel(gameState.currentLevel + 1);
-                        }
-                        
-                        if (window.player) {
-                            player.jumpBoosterChargesThisLife = currentBoosterCharges;
-                            player.jumpBoosterCharges = currentBoosterCharges;
-                        }
-                        
-                        if (window.startGame) {
-                            setTimeout(() => {
-                                startGame();
-                                console.log(`🚀 Level ${gameState.currentLevel} dimulai dengan ${player.jumpBoosterChargesThisLife} booster charges`);
-                            }, 300);
-                        }
-                    }
+            buttons.forEach(btn => {
+                const button = document.createElement('button');
+                button.className = 'btn';
+                button.id = btn.id;
+                button.innerHTML = `<i class="fas ${btn.icon}"></i> ${btn.text}`;
+                button.style.background = btn.color;
+                button.style.color = 'white';
+                button.style.minWidth = '100px';
+                button.style.padding = '10px 15px';
+                button.style.margin = '0 5px';
+                
+                // Tambahkan event listener berdasarkan action
+                button.addEventListener('click', function() {
+                    handleFullscreenButtonAction(btn.action);
                 });
-            }
-            
-            if (retryBtn) {
-                retryBtn.addEventListener('click', function() {
-                    console.log("🔄 Tombol 'Ulangi Level' diklik");
-                    
-                    // Tutup popup
-                    overlay.classList.remove('show');
-                    popup.classList.remove('show');
-                    
-                    // Reset jump booster untuk hidup baru
-                    if (window.player && player.resetJumpBoosterForNewLife) {
-                        player.resetJumpBoosterForNewLife();
-                        console.log(`🔄 Jump booster reset untuk ulang level: ${player.jumpBoosterChargesThisLife} charges`);
-                    }
-                    
-                    // Restart level
-                    if (window.restartGame) {
-                        setTimeout(restartGame, 300);
-                    }
-                });
-            }
-            
-            if (menuBtn) {
-                menuBtn.addEventListener('click', function() {
-                    console.log("🏠 Tombol 'Menu Utama' diklik");
-                    
-                    // Tutup popup
-                    overlay.classList.remove('show');
-                    popup.classList.remove('show');
-                    
-                    // Kembali ke menu utama
-                    if (window.returnToMainMenu) {
-                        setTimeout(returnToMainMenu, 300);
-                    }
-                });
-            }
-            
-            console.log("✅ Popup level complete baru ditampilkan!");
-        };
-        
-        // =============================================
-        // FUNGSI UNTUK MENYEMBUNYIKAN POPUP
-        // =============================================
-        window.hideLevelCompletePopup = function() {
-            const overlay = document.querySelector('.overlay');
-            const popup = document.getElementById('levelCompletePopupV2');
-            
-            if (overlay) overlay.classList.remove('show');
-            if (popup) popup.classList.remove('show');
-        };
-
-        
-        console.log("🎮 Koko Adventure v4.0 - Sistem Popup Baru Siap!");
-
-        // =============================================
-// SISTEM MULAI GAME LANGSUNG FULLSCREEN LANDSCAPE
-// =============================================
-
-let isFullscreenMode = false;
-
-// Fungsi untuk memulai game dengan fullscreen landscape
-function startGameFullscreen() {
-    console.log("🚀 Memulai game dengan fullscreen landscape...");
-    
-    // 1. Masuk ke fullscreen
-    const gameContainer = document.getElementById('gameContainer') || document.querySelector('.game-container');
-    const canvas = document.getElementById('gameCanvas');
-    
-    if (!document.fullscreenElement) {
-        // Request fullscreen
-        const element = gameContainer || canvas || document.documentElement;
-        
-        if (element.requestFullscreen) {
-            element.requestFullscreen();
-        } else if (element.webkitRequestFullscreen) {
-            element.webkitRequestFullscreen();
-        } else if (element.msRequestFullscreen) {
-            element.msRequestFullscreen();
+                
+                fullscreenControls.appendChild(button);
+            });
         }
         
-        isFullscreenMode = true;
-        
-        // 2. Terapkan landscape mode di mobile
-        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-            console.log("📱 Mobile device detected - forcing landscape");
-            forceLandscapeMode();
-        }
-        
-        // 3. Sembunyikan elemen yang tidak perlu
-        hideNonGameElements();
-        
-        // 4. Pindahkan tombol-tombol ke dalam game fullscreen
-        moveControlsToFullscreen();
-        
-        // 5. Mulai game (jika ada fungsi startGame)
-        if (window.startGame) {
-            setTimeout(() => {
-                startGame();
-                console.log("✅ Game dimulai dalam mode fullscreen landscape");
-            }, 500);
-        }
-    } else {
-        // Jika sudah fullscreen, mulai game saja
-        if (window.startGame) {
-            startGame();
-        }
-    }
-}
-
-// Fungsi untuk memaksa landscape di mobile
-function forceLandscapeMode() {
-    const viewportMeta = document.querySelector('meta[name="viewport"]');
-    if (viewportMeta) {
-        // Set orientasi landscape
-        viewportMeta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape";
-    }
-    
-    // Style untuk memaksa landscape
-    const style = document.createElement('style');
-    style.textContent = `
-        @media screen and (orientation: portrait) {
-            :fullscreen, :-webkit-full-screen, :-moz-full-screen, :-ms-fullscreen {
-                transform: rotate(90deg);
-                transform-origin: center;
-                width: 100vh;
-                height: 100vw;
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) rotate(90deg);
-            }
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// Fungsi untuk menyembunyikan elemen yang tidak perlu di fullscreen
-function hideNonGameElements() {
-    const elementsToHide = [
-        '.instructions',
-        '.level-selector',
-        'footer',
-        '.booster-display',
-        '.container > header'
-    ];
-    
-    elementsToHide.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(el => {
-            el.style.display = 'none';
-        });
-    });
-    
-    // Ubah tampilan container game
-    const gameContainer = document.querySelector('.game-container');
-    if (gameContainer) {
-        gameContainer.style.width = '100%';
-        gameContainer.style.height = '100vh';
-        gameContainer.style.margin = '0';
-        gameContainer.style.padding = '0';
-        gameContainer.style.borderRadius = '0';
-        gameContainer.style.border = 'none';
-        gameContainer.style.background = '#1e3a2a';
-    }
-}
-
-// Fungsi untuk memindahkan tombol ke dalam game fullscreen
-function moveControlsToFullscreen() {
-    const gameControls = document.querySelector('.game-controls');
-    const gameCanvas = document.getElementById('gameCanvas');
-    
-    if (gameControls && gameCanvas) {
-        // Buat container untuk tombol di dalam game
-        const inGameControls = document.createElement('div');
-        inGameControls.className = 'fullscreen-game-controls';
-        inGameControls.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            z-index: 1000;
-            background: rgba(30, 58, 42, 0.95);
-            padding: 15px;
-            border-radius: 15px;
-            border: 3px solid #4CAF50;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px);
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 90%;
-        `;
-        
-        // Clone tombol-tombol
-        const buttons = gameControls.querySelectorAll('.btn');
-        buttons.forEach(btn => {
-            const clonedBtn = btn.cloneNode(true);
-            clonedBtn.style.cssText = `
-                min-width: 120px;
-                padding: 10px 15px;
-                font-size: 0.9rem;
-                margin: 5px;
-            `;
+        function handleFullscreenButtonAction(action) {
+            console.log(`🔘 Fullscreen button action: ${action}`);
             
-            // Atur event listener untuk tombol yang diklon
-            if (clonedBtn.id === 'startBtn') {
-                clonedBtn.innerHTML = '<i class="fas fa-redo"></i> Ulangi';
-                clonedBtn.addEventListener('click', function() {
-                    if (window.restartGame) {
-                        restartGame();
-                    }
-                });
-            } else if (clonedBtn.id === 'pauseBtn') {
-                clonedBtn.addEventListener('click', function() {
+            switch(action) {
+                case 'togglePause':
                     if (window.togglePause) {
                         togglePause();
                     }
-                });
-            } else if (clonedBtn.id === 'resetBtn') {
-                clonedBtn.addEventListener('click', function() {
+                    break;
+                    
+                case 'restartGame':
                     if (window.restartGame) {
                         restartGame();
                     }
-                });
-            } else if (clonedBtn.id === 'soundBtn') {
-                clonedBtn.addEventListener('click', function() {
-                    // Handle sound toggle
-                    const music = document.getElementById('backgroundMusic');
-                    if (music) {
-                        if (music.paused) {
-                            music.play();
-                            this.innerHTML = '<i class="fas fa-volume-up"></i> Suara';
+                    break;
+                    
+                case 'toggleSound':
+                    // Toggle audio
+                    const audio = document.getElementById('backgroundMusic');
+                    const soundBtn = document.querySelector('#fullscreenControls .btn:nth-child(3)');
+                    if (audio) {
+                        if (audio.paused) {
+                            audio.play();
+                            if (soundBtn) soundBtn.innerHTML = '<i class="fas fa-volume-up"></i> Suara';
                         } else {
-                            music.pause();
-                            this.innerHTML = '<i class="fas fa-volume-mute"></i> Suara';
+                            audio.pause();
+                            if (soundBtn) soundBtn.innerHTML = '<i class="fas fa-volume-mute"></i> Suara';
                         }
                     }
+                    break;
+                    
+                case 'useJumpBooster':
+                    if (window.player && player.useJumpBooster) {
+                        player.useJumpBooster();
+                    }
+                    break;
+                    
+                case 'performAttack':
+                    // Simulasi tombol Z ditekan
+                    if (window.performMeleeAttack) {
+                        performMeleeAttack();
+                    }
+                    break;
+            }
+        }
+        
+        function setupFullscreenMobileControls() {
+            console.log("📱 Setting up fullscreen mobile controls...");
+            
+            const mobileControls = document.getElementById('fullscreenMobileControls');
+            if (!mobileControls) return;
+            
+            // Clone mobile controls dari yang sudah ada
+            const existingControls = document.getElementById('mobileControls');
+            if (existingControls) {
+                mobileControls.innerHTML = existingControls.innerHTML;
+                
+                // Setup ulang event listeners
+                setTimeout(() => {
+                    setupMobileControlsForFullscreen();
+                }, 100);
+            }
+        }
+        
+        function setupMobileControlsForFullscreen() {
+            // Setup ulang mobile controls untuk fullscreen
+            console.log("🔄 Setting up mobile controls for fullscreen...");
+            
+            // Tambahkan logika untuk mobile controls di sini
+            // (Sama seperti setupMobileControls di game.js tapi untuk fullscreen)
+        }
+        
+        function setupAudioSystem() {
+            console.log("🎵 Setting up audio system...");
+            
+            const audio = document.getElementById('backgroundMusic');
+            if (audio) {
+                audio.volume = 0.4;
+                
+                // Auto-play dengan interaksi user
+                document.addEventListener('click', function initAudio() {
+                    audio.play().then(() => {
+                        console.log("🎵 Audio started");
+                    }).catch(e => {
+                        console.log("🎵 Audio play failed, waiting for user interaction");
+                    });
+                    document.removeEventListener('click', initAudio);
                 });
-            } else if (clonedBtn.id === 'menuBtn') {
-                clonedBtn.addEventListener('click', function() {
-                    exitFullscreen();
-                });
+            }
+        }
+        
+        // Function untuk update stats di fullscreen
+        function updateFullscreenStats() {
+            if (!isFullscreenMode) return;
+            
+            const stats = {
+                lives: document.getElementById('fsLives'),
+                score: document.getElementById('fsScore'),
+                level: document.getElementById('fsLevel'),
+                timer: document.getElementById('fsTimer'),
+                booster: document.getElementById('fsBooster')
+            };
+            
+            // Update dari game state jika ada
+            if (window.gameState) {
+                if (stats.lives) stats.lives.innerHTML = `<i class="fas fa-heart"></i> ${gameState.lives}`;
+                if (stats.score) stats.score.innerHTML = `<i class="fas fa-star"></i> ${gameState.score}`;
+                if (stats.level) stats.level.innerHTML = `<i class="fas fa-flag"></i> Level ${gameState.currentLevel}`;
+                if (stats.timer) stats.timer.innerHTML = `<i class="fas fa-clock"></i> ${Math.floor(gameState.timeLeft)}s`;
             }
             
-            inGameControls.appendChild(clonedBtn);
-        });
-        
-        // Tambahkan tombol keluar fullscreen
-        const exitBtn = document.createElement('button');
-        exitBtn.className = 'btn btn-fullscreen';
-        exitBtn.innerHTML = '<i class="fas fa-compress"></i> Keluar';
-        exitBtn.style.cssText = `
-            min-width: 100px;
-            padding: 10px 15px;
-            background: linear-gradient(135deg, #f44336, #D32F2F);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        `;
-        exitBtn.addEventListener('click', exitFullscreen);
-        inGameControls.appendChild(exitBtn);
-        
-        // Tambahkan ke body
-        document.body.appendChild(inGameControls);
-        
-        // Sembunyikan tombol asli
-        gameControls.style.display = 'none';
-    }
-}
-
-// Fungsi untuk keluar fullscreen
-function exitFullscreen() {
-    if (document.exitFullscreen) {
-        document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
-    }
-    
-    isFullscreenMode = false;
-    
-    // Kembalikan elemen yang disembunyikan
-    const elementsToShow = [
-        '.instructions',
-        '.level-selector',
-        'footer',
-        '.booster-display',
-        '.container > header'
-    ];
-    
-    elementsToShow.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(el => {
-            el.style.display = '';
-        });
-    });
-    
-    // Kembalikan tampilan container game
-    const gameContainer = document.querySelector('.game-container');
-    if (gameContainer) {
-        gameContainer.style.width = '';
-        gameContainer.style.height = '';
-        gameContainer.style.margin = '';
-        gameContainer.style.padding = '';
-        gameContainer.style.borderRadius = '';
-        gameContainer.style.border = '';
-        gameContainer.style.background = '';
-    }
-    
-    // Hapus tombol fullscreen
-    const fullscreenControls = document.querySelector('.fullscreen-game-controls');
-    if (fullscreenControls) {
-        fullscreenControls.remove();
-    }
-    
-    // Tampilkan kembali tombol asli
-    const gameControls = document.querySelector('.game-controls');
-    if (gameControls) {
-        gameControls.style.display = '';
-    }
-    
-    // Kembalikan ke menu utama
-    if (window.returnToMainMenu) {
-        returnToMainMenu();
-    }
-}
-
-// Event listener untuk perubahan fullscreen
-document.addEventListener('fullscreenchange', handleFullscreenChange);
-document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
-function handleFullscreenChange() {
-    const isFullscreen = document.fullscreenElement || 
-                        document.webkitFullscreenElement || 
-                        document.mozFullScreenElement || 
-                        document.msFullscreenElement;
-    
-    if (!isFullscreen && isFullscreenMode) {
-        // Jika keluar fullscreen, reset state
-        exitFullscreen();
-    }
-}
-
-// =============================================
-// INISIALISASI TOMBOL MULAI GAME
-// =============================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Setup tombol mulai game
-    const startBtn = document.getElementById('startBtn');
-    if (startBtn) {
-        startBtn.addEventListener('click', function() {
-            console.log("🎮 Tombol 'Mulai Game (Fullscreen)' diklik");
-            startGameFullscreen();
-        });
-    }
-    
-    // Setup mobile controls untuk fullscreen
-    setupFullscreenMobileControls();
-});
-
-// Setup mobile controls di fullscreen
-function setupFullscreenMobileControls() {
-    const mobileControls = document.querySelector('.mobile-controls');
-    if (mobileControls) {
-        // Mobile controls akan muncul otomatis di fullscreen
-        document.addEventListener('fullscreenchange', function() {
-            if (document.fullscreenElement) {
-                mobileControls.style.display = 'flex';
-                mobileControls.classList.add('fullscreen-visible');
-            } else {
-                mobileControls.style.display = 'none';
-                mobileControls.classList.remove('fullscreen-visible');
+            // Update booster jika ada player
+            if (window.player && stats.booster) {
+                stats.booster.innerHTML = `<i class="fas fa-rocket"></i> ${player.jumpBoosterChargesThisLife}`;
             }
-        });
-    }
-}
+        }
+        
+        // Panggil update stats secara berkala
+        setInterval(updateFullscreenStats, 1000);
     </script>
 </body>
 </html>
